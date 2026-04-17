@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trampos – Entrar</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="auth-page">
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-logo">🔧 <strong>Trampos</strong></div>
+    <h1 class="auth-title">Entrar na conta</h1>
+
+    <form id="form-login" novalidate>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="seu@email.com" autocomplete="email" />
+        <span class="field-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <div class="input-group">
+          <input type="password" id="senha" placeholder="••••••" autocomplete="current-password" />
+          <button type="button" class="input-toggle" onclick="toggleSenha('senha')" title="Mostrar/ocultar">👁</button>
+        </div>
+        <span class="field-error"></span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="btn-login">Entrar</button>
+    </form>
+
+    <p class="auth-footer">Não tem conta? <a href="register.html">Cadastre-se</a></p>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+  // Already logged in → go home
+  if (getUser()) window.location.href = "index.html";
+
+  document.getElementById("form-login").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearValidation(e.target);
+
+    const emailInput = document.getElementById("email");
+    const senhaInput = document.getElementById("senha");
+
+    let ok = true;
+    ok = validate(emailInput, regex.email, "Email inválido.") && ok;
+    ok = validate(senhaInput, regex.senha, "Senha deve ter no mínimo 6 caracteres.") && ok;
+    if (!ok) return;
+
+    const btn = document.getElementById("btn-login");
+    btn.disabled = true; btn.textContent = "Entrando...";
+
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput.value.trim(), senha: senhaInput.value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.detail || "Erro ao entrar.", "error");
+      } else {
+        setUser(data);
+        window.location.href = "index.html";
+      }
+    } catch {
+      showToast("Erro de conexão com o servidor.", "error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Entrar";
+    }
+  });
+</script>
+</body>
+</html>

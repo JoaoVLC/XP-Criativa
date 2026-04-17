@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trampos – Publicar Vaga</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav id="main-nav"></nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Publicar Nova Vaga</h1>
+    <p class="page-subtitle">Preencha os detalhes para encontrar o profissional ideal</p>
+  </div>
+
+  <div class="card" style="max-width:700px;">
+    <form id="form-vaga" novalidate>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="titulo">Título da Vaga <span class="required">*</span></label>
+          <input type="text" id="titulo" placeholder="Ex: Garçom para evento" maxlength="100" />
+          <span class="field-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="local">Localização <span class="required">*</span></label>
+          <input type="text" id="local" placeholder="Ex: São Paulo – SP" maxlength="150" />
+          <span class="field-error"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="descricao">Descrição <span class="required">*</span></label>
+        <textarea id="descricao" rows="4"
+          placeholder="Descreva as atividades, requisitos e benefícios (mínimo 20 caracteres)"
+          maxlength="2000"></textarea>
+        <span class="field-error"></span>
+        <span class="char-count" id="char-count">0 caractere(s)</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="data">Data do serviço <span class="required">*</span></label>
+          <input type="date" id="data" />
+          <span class="field-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="pagamento">Pagamento (R$) <span class="required">*</span></label>
+          <input type="number" id="pagamento" placeholder="0.00" step="0.01" min="0" max="99999.99" />
+          <span class="field-error"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="id_categoria">Categoria</label>
+        <select id="id_categoria">
+          <option value="">— Sem categoria —</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="btn-pub">Publicar Vaga</button>
+        <a href="index.html" class="btn btn-ghost">Cancelar</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+  // Only empresa can access this page
+  const user = requireTipo("empresa");
+  if (!user) throw new Error();
+  renderNav("criar");
+
+  // Minimum date = today
+  document.getElementById("data").min = new Date().toISOString().split("T")[0];
+
+  // Character counter
+  document.getElementById("descricao").addEventListener("input", function () {
+    const n   = this.value.trim().length;
+    const el  = document.getElementById("char-count");
+    el.textContent = `${n} caractere(s)${n < 20 ? " — mínimo 20" : ""}`;
+    el.className   = `char-count ${n >= 20 ? "ok" : ""}`;
+  });
+
+  async function carregarCategorias() {
+    try {
+      const cats = await (await fetch(`${API}/categorias`)).json();
+      const sel  = document.getElementById("id_categoria");
+      cats.forEach(c => {
+        const o = document.createElement("option");
+        o.value = c.id_categoria; o.textContent = c.nome;
+        sel.appendChild(o);
+      });
+    } catch {}
+  }
+
+  document.getElementById("form-vaga").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearValidation(e.target);
+
+    const tituloEl = document.getElementById("titulo");
+    const localEl  = document.getElementById("local");
+    const descEl   = document.getElementById("descricao");
+    const dataEl   = document.getElementById("data");
+    const pagEl    = document.getElementById("pagamento");
+    const catVal   = document.getElementById("id_categoria").value;
+
+    let ok = true;
+    ok = validate(tituloEl, regex.titulo,    "Título deve ter no mínimo 5 caracteres.")     && ok;
+    ok = validate(localEl,  regex.local,     "Localização deve ter no mínimo 3 caracteres.") && ok;
+    ok = validate(descEl,   regex.descricao, "Descrição deve ter no mínimo 20 caracteres.")  && ok;
+
+    // Date validation
+    if (!dataEl.value) {
+      setFieldState(dataEl, false, "Selecione a data do serviço."); ok = false;
+    } else if (dataEl.value < new Date().toISOString().split("T")[0]) {
+      setFieldState(dataEl, false, "A data não pode ser no passado."); ok = false;
+    } else {
+      setFieldState(dataEl, true);
+    }
+
+    // Payment validation — must be a non-negative number
+    const pagVal = parseFloat(pagEl.value);
+    if (pagEl.value === "" || isNaN(pagVal) || pagVal < 0) {
+      setFieldState(pagEl, false, "Informe um valor de pagamento válido (≥ 0)."); ok = false;
+    } else {
+      setFieldState(pagEl, true);
+    }
+
+    if (!ok) return;
+
+    const btn = document.getElementById("btn-pub");
+    btn.disabled = true; btn.textContent = "Publicando...";
+
+    try {
+      const res = await fetch(`${API}/vagas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_empresa:   user.id_usuario,
+          titulo:       tituloEl.value.trim(),
+          descricao:    descEl.value.trim(),
+          local:        localEl.value.trim(),
+          data:         dataEl.value,
+          pagamento:    pagVal,
+          id_categoria: catVal ? Number(catVal) : null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.detail || "Erro ao criar vaga.", "error");
+      } else {
+        showToast(`Vaga "${data.titulo}" publicada! ✅`, "success");
+        setTimeout(() => window.location.href = `job.html?id=${data.id_vaga}`, 900);
+      }
+    } catch {
+      showToast("Erro de conexão com o servidor.", "error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Publicar Vaga";
+    }
+  });
+
+  carregarCategorias();
+</script>
+</body>
+</html>

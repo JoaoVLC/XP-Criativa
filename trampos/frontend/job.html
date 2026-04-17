@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trampos – Detalhes da Vaga</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<nav id="main-nav"></nav>
+
+<div class="container" id="page-content">
+  <div class="skeleton-list mb-4">
+    <div class="skeleton" style="height:200px;"></div>
+    <div class="skeleton" style="height:90px;"></div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+  const user  = requireLogin();
+  if (!user) throw new Error();
+  renderNav("vagas");
+
+  const idVaga = new URLSearchParams(location.search).get("id");
+
+  async function init() {
+    const page = document.getElementById("page-content");
+    if (!idVaga) { page.innerHTML = `<div class="empty-state"><span>🔍</span><p>Vaga não especificada.</p></div>`; return; }
+
+    try {
+      const res = await fetch(`${API}/vagas/${idVaga}`);
+      if (!res.ok) throw new Error();
+      const v = await res.json();
+      document.title = `Trampos – ${v.titulo}`;
+
+      page.innerHTML = `
+        <div class="card mb-4">
+          <a href="index.html" class="back-link">← Voltar às vagas</a>
+          <div style="margin-top:.75rem;">
+            ${v.categoria ? `<span class="badge badge-secondary mb-2">${v.categoria.nome}</span>` : ""}
+            <h1 style="font-size:1.6rem;font-weight:700;margin:.4rem 0;">${v.titulo}</h1>
+            <div class="detail-tags">
+              <span class="tag">📍 ${v.local}</span>
+              <span class="tag">📅 ${formatDate(v.data)}</span>
+              <span class="tag tag-green">💰 ${formatMoney(v.pagamento)}</span>
+              ${v.empresa ? `<span class="tag">🏢 ${v.empresa.nome}</span>` : ""}
+            </div>
+            <div class="detail-desc">${v.descricao}</div>
+          </div>
+        </div>
+        <div id="acao-section"></div>
+        <div id="candidatos-section"></div>`;
+
+      renderAcao(v);
+    } catch {
+      page.innerHTML = `<div class="empty-state"><span>😕</span><p>Vaga não encontrada.</p></div>`;
+    }
+  }
+
+  function renderAcao(v) {
+    const acao = document.getElementById("acao-section");
+    if (user.tipo === "freelancer") {
+      acao.innerHTML = `
+        <div class="card mb-4">
+          <h3 style="margin-bottom:.5rem;">Candidatar-se</h3>
+          <p style="color:var(--gray-600);font-size:.9rem;margin-bottom:1rem;">
+            Candidatando como <strong>${user.nome}</strong>
+          </p>
+          <button class="btn btn-success" id="btn-cand" onclick="candidatar()">Enviar Candidatura</button>
+        </div>`;
+      carregarCandidatos(false); // show count only
+    } else if (user.tipo === "empresa" && user.id_usuario === v.id_empresa) {
+      acao.innerHTML = `<div class="info-banner">📋 Esta é sua vaga. Gerencie as candidaturas abaixo.</div>`;
+      carregarCandidatos(true); // show full list
+    }
+    // Another empresa → show nothing
+  }
+
+  async function candidatar() {
+    const btn = document.getElementById("btn-cand");
+    btn.disabled = true; btn.textContent = "Enviando...";
+    try {
+      const res = await fetch(`${API}/candidaturas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_vaga: Number(idVaga), id_usuario: user.id_usuario }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.detail || "Erro.", "error");
+        btn.disabled = false; btn.textContent = "Enviar Candidatura";
+      } else {
+        showToast("Candidatura enviada! ✅", "success");
+        btn.textContent = "✅ Candidatura enviada";
+        carregarCandidatos(false);
+      }
+    } catch {
+      showToast("Erro de conexão.", "error");
+      btn.disabled = false; btn.textContent = "Enviar Candidatura";
+    }
+  }
+
+  async function carregarCandidatos(fullView) {
+    const section = document.getElementById("candidatos-section");
+    try {
+      const res   = await fetch(`${API}/vagas/${idVaga}/candidaturas`);
+      const cands = await res.json();
+
+      if (!fullView) {
+        // Freelancer: just show count as an info banner
+        if (cands.length) {
+          section.innerHTML = `<div class="info-banner">👥 ${cands.length} candidato(s) nesta vaga.</div>`;
+        }
+        return;
+      }
+
+      if (!cands.length) {
+        section.innerHTML = `<div class="card"><h3>Candidatos</h3><p class="empty-small">Nenhum candidato ainda.</p></div>`;
+        return;
+      }
+
+      const statusLabel = { pendente:"⏳ Pendente", aceito:"✅ Aceito", recusado:"❌ Recusado" };
+      const statusClass = { pendente:"warning",    aceito:"success",   recusado:"danger" };
+
+      section.innerHTML = `
+        <div class="card">
+          <h3 style="margin-bottom:1rem;">Candidatos (${cands.length})</h3>
+          <div class="candidatos-list">
+            ${cands.map(c => `
+              <div class="candidato-item" id="cand-${c.id_candidatura}">
+                <div class="avatar-lg">${c.usuario ? c.usuario.nome[0].toUpperCase() : "?"}</div>
+                <div class="candidato-info">
+                  <strong>${c.usuario ? c.usuario.nome : `ID ${c.id_usuario}`}</strong>
+                  <div style="font-size:.82rem;color:var(--gray-600);">${c.usuario?.email ?? ""}</div>
+                </div>
+                <div class="candidato-actions">
+                  <span class="badge badge-${statusClass[c.status] || 'secondary'}" id="badge-${c.id_candidatura}">
+                    ${statusLabel[c.status] || c.status}
+                  </span>
+                  ${c.status === "pendente" ? `
+                    <button class="btn btn-success btn-sm" onclick="mudarStatus(${c.id_candidatura},'aceito')">Aceitar</button>
+                    <button class="btn btn-outline btn-sm" onclick="mudarStatus(${c.id_candidatura},'recusado')">Recusar</button>` : ""}
+                </div>
+              </div>`).join("")}
+          </div>
+        </div>`;
+    } catch {}
+  }
+
+  async function mudarStatus(id, status) {
+    try {
+      const res = await fetch(`${API}/candidaturas/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        showToast(`Candidatura ${status === "aceito" ? "aceita ✅" : "recusada ❌"}.`, "success");
+        carregarCandidatos(true);
+      } else showToast("Erro ao atualizar.", "error");
+    } catch { showToast("Erro de conexão.", "error"); }
+  }
+
+  init();
+</script>
+</body>
+</html>
