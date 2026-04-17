@@ -1,0 +1,43 @@
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+.env/
+
+# ── Variáveis de ambiente ─────────────────────────────────────
+.env
+# .env.example é versionado (sem segredos)
+
+# ── Banco de dados local ──────────────────────────────────────
+*.sqlite3
+*.db
+
+# ── Node / Frontend ───────────────────────────────────────────
+node_modules/
+dist/
+.cache/
+
+# ── Editores / IDEs ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Sistema operacional ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Build / misc ──────────────────────────────────────────────
+*.log
+*.egg-info/
+.pytest_cache/
+htmlcov/
+.coverage

@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
+import bcrypt
 from app.database import get_db
 from app import models, schemas
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(plain: str) -> str:
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
 @router.post("/usuarios", response_model=schemas.UsuarioOut, status_code=201)
@@ -15,7 +18,7 @@ def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail="Email já cadastrado.")
 
     dados = usuario.model_dump()
-    dados["senha"] = pwd_context.hash(dados["senha"])
+    dados["senha"] = hash_password(dados["senha"])
     db_usuario = models.Usuario(**dados)
     db.add(db_usuario)
     db.commit()
@@ -61,7 +64,7 @@ def atualizar_usuario(
             raise HTTPException(status_code=400, detail="Email já em uso por outro usuário.")
 
     if "senha" in update_data:
-        update_data["senha"] = pwd_context.hash(update_data["senha"])
+        update_data["senha"] = hash_password(update_data["senha"])
 
     for campo, valor in update_data.items():
         setattr(usuario, campo, valor)

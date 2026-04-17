@@ -5,3 +5,4 @@ pymysql
 pydantic[email]
 python-dotenv
 passlib[bcrypt]
+passlib
