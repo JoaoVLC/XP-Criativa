@@ -1,11 +1,4 @@
--- ============================================================
---  TRAMPOS  –  Script completo de banco de dados
---  Cria o schema, todas as tabelas e popula com dados fake.
---
---  Como usar:
---    mysql -u root -p < trampos.sql
---  ou dentro do MySQL:
---    source /caminho/para/trampos.sql
+-- ===========================================================
 --
 --  Todos os usuários fake têm senha: senha123
 -- ============================================================
