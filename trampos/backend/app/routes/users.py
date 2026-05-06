@@ -1,15 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 import bcrypt
 from app.database import get_db
 from app import models, schemas
-
+import os
+import shutil
 router = APIRouter()
 
 
 def hash_password(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
+@router.post("/usuarios/{id_usuario}/avatar")
 
 @router.post("/usuarios", response_model=schemas.UsuarioOut, status_code=201)
 def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
@@ -72,7 +74,36 @@ def atualizar_usuario(
     db.commit()
     db.refresh(usuario)
     return usuario
+    
+@router.post("/usuarios/{id_usuario}/avatar", response_model=schemas.UsuarioOut)
+def upload_avatar(
+    id_usuario: int,
+    avatar: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
 
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    if not avatar.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Envie apenas arquivos de imagem.")
+
+    os.makedirs("uploads/avatars", exist_ok=True)
+
+    extensao = os.path.splitext(avatar.filename)[1]
+    nome_arquivo = f"user_{id_usuario}{extensao}"
+    caminho = os.path.join("uploads", "avatars", nome_arquivo)
+
+    with open(caminho, "wb") as buffer:
+        shutil.copyfileobj(avatar.file, buffer)
+
+    usuario.avatar_url = f"http://localhost:8000/uploads/avatars/{nome_arquivo}"
+
+    db.commit()
+    db.refresh(usuario)
+
+    return usuario
 
 @router.delete("/usuarios/{id_usuario}", status_code=204)
 def deletar_usuario(id_usuario: int, db: Session = Depends(get_db)):

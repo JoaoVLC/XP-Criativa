@@ -11,11 +11,7 @@ class Usuario(Base):
     email = Column(String(100), unique=True, nullable=False)
     senha = Column(String(255), nullable=False)
     tipo = Column(Enum("empresa", "freelancer"), nullable=False)
-
-    vagas = relationship("Vaga", back_populates="empresa", foreign_keys="Vaga.id_empresa")
-    candidaturas = relationship("Candidatura", back_populates="usuario")
-
-
+    avatar_url = Column(String(255), nullable=True)
 class Categoria(Base):
     __tablename__ = "Categoria"
 

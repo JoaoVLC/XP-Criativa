@@ -31,7 +31,8 @@ class UsuarioOut(BaseModel):
     nome: str
     email: str
     tipo: str
-
+    avatar_url: Optional[str] = None
+    
     class Config:
         from_attributes = True
 
