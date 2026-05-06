@@ -19,7 +19,23 @@ function logout() {
   localStorage.removeItem("trampos_user");
   window.location.href = "login.html";
 }
+// Timeout de sessão (30 minutos de inatividade)
+let sessionTimeout;
 
+function resetSessionTimeout() {
+  clearTimeout(sessionTimeout);
+  sessionTimeout = setTimeout(() => {
+    logout(); // Função já existente para encerrar a sessão
+    alert("Sua sessão expirou devido à inatividade. Faça login novamente.");
+  }, 5 * 60 * 1000); // 5 minutos
+}
+
+// Reseta o timeout em qualquer interação do usuário
+document.addEventListener("mousemove", resetSessionTimeout);
+document.addEventListener("keydown", resetSessionTimeout);
+
+// Inicializa o timeout ao carregar a página
+resetSessionTimeout();
 /* ── Route guards ─────────────────────────────────────────── */
 
 function requireLogin() {
