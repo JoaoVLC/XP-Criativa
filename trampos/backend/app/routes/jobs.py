@@ -8,20 +8,25 @@ router = APIRouter()
 
 # ── Categorias ────────────────────────────────────────────────────────────────
 
-@router.post("/categorias", response_model=schemas.CategoriaOut, status_code=201)
-def criar_categoria(categoria: schemas.CategoriaCreate, db: Session = Depends(get_db)):
-    db_cat = models.Categoria(**categoria.model_dump())
-    db.add(db_cat)
+@router.put("/categorias/{id_categoria}", response_model=schemas.CategoriaOut)
+def atualizar_categoria(id_categoria: int, categoria: schemas.CategoriaCreate, db: Session = Depends(get_db)):
+    db_categoria = db.query(models.Categoria).filter(models.Categoria.id_categoria == id_categoria).first()
+    if not db_categoria:
+        raise HTTPException(status_code=404, detail="Categoria não encontrada.")
+    for key, value in categoria.model_dump().items():
+        setattr(db_categoria, key, value)
     db.commit()
-    db.refresh(db_cat)
-    return db_cat
+    db.refresh(db_categoria)
+    return db_categoria
 
 
-@router.get("/categorias", response_model=list[schemas.CategoriaOut])
-def listar_categorias(db: Session = Depends(get_db)):
-    return db.query(models.Categoria).all()
-
-
+@router.delete("/categorias/{id_categoria}", status_code=204)
+def deletar_categoria(id_categoria: int, db: Session = Depends(get_db)):
+    db_categoria = db.query(models.Categoria).filter(models.Categoria.id_categoria == id_categoria).first()
+    if not db_categoria:
+        raise HTTPException(status_code=404, detail="Categoria não encontrada.")
+    db.delete(db_categoria)
+    db.commit()
 # ── Vagas ─────────────────────────────────────────────────────────────────────
 
 @router.post("/vagas", response_model=schemas.VagaOut, status_code=201)
