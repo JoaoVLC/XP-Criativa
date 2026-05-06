@@ -5,24 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trampos – Vagas Disponíveis</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <script>
+    renderUserInfo();
+  </script>
 </head>
 <body>
 
-<nav id="main-nav"></nav>
+  <nav id="main-nav"></nav>
 
-<div class="container">
-  <div class="page-header">
-    <div>
-      <h1>Vagas Disponíveis</h1>
-      <p class="page-subtitle">Encontre trabalhos informais perto de você</p>
+  <div id="user-info" class="user-info"></div>
+  
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1>Vagas Disponíveis</h1>
+        <p class="page-subtitle">Encontre trabalhos informais perto de você</p>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="search" class="search-input" placeholder="🔍 Buscar por título, local..." />
+        <select id="filter-cat" class="select-input">
+          <option value="">Todas as categorias</option>
+        </select>
+      </div>
     </div>
-    <div class="filter-bar">
-      <input type="text" id="search" class="search-input" placeholder="🔍 Buscar por título, local..." />
-      <select id="filter-cat" class="select-input">
-        <option value="">Todas as categorias</option>
-      </select>
-    </div>
-  </div>
 
   <div id="job-list" class="job-list">
     <div class="skeleton-list">

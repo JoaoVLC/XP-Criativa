@@ -81,6 +81,15 @@ function renderNav(active = "") {
 function toggleNav() {
   document.getElementById("nav-menu")?.classList.toggle("open");
 }
+function renderUserInfo() {
+  const userInfo = document.getElementById("user-info");
+  const user = getUser();
+  if (user && userInfo) {
+    userInfo.innerHTML = `
+      <p>Bem-vindo, <strong>${user.nome}</strong> (${user.tipo === "empresa" ? "Empresa" : "Freelancer"})</p>
+    `;
+  }
+}
 
 /* ── Toast notifications ──────────────────────────────────── */
 
