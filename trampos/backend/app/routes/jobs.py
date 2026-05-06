@@ -78,13 +78,17 @@ def buscar_vaga(id_vaga: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/vagas/{id_vaga}", status_code=204)
-def deletar_vaga(id_vaga: int, db: Session = Depends(get_db)):
+def deletar_vaga(id_vaga: int, id_usuario: int, db: Session = Depends(get_db)):
     vaga = db.query(models.Vaga).filter(models.Vaga.id_vaga == id_vaga).first()
+
     if not vaga:
         raise HTTPException(status_code=404, detail="Vaga não encontrada.")
+
+    if vaga.id_empresa != id_usuario:
+        raise HTTPException(status_code=403, detail="Você não tem permissão para excluir esta vaga.")
+
     db.delete(vaga)
     db.commit()
-
 
 # ── Candidaturas ──────────────────────────────────────────────────────────────
 
@@ -149,6 +153,7 @@ def candidatos_da_vaga(id_vaga: int, db: Session = Depends(get_db)):
 def atualizar_candidatura(
     id_candidatura: int,
     dados: schemas.CandidaturaStatusUpdate,
+    id_usuario: int,
     db: Session = Depends(get_db),
 ):
     cand = (
@@ -156,8 +161,15 @@ def atualizar_candidatura(
         .filter(models.Candidatura.id_candidatura == id_candidatura)
         .first()
     )
+
     if not cand:
         raise HTTPException(status_code=404, detail="Candidatura não encontrada.")
+
+    vaga = db.query(models.Vaga).filter(models.Vaga.id_vaga == cand.id_vaga).first()
+
+    if not vaga or vaga.id_empresa != id_usuario:
+        raise HTTPException(status_code=403, detail="Você não tem permissão para alterar esta candidatura.")
+
     cand.status = dados.status
     db.commit()
     db.refresh(cand)

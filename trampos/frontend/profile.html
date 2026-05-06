@@ -150,7 +150,9 @@
       "Esta ação é irreversível e apagará todos os seus dados.",
       async () => {
         try {
-          const res = await fetch(`${API}/usuarios/${user.id_usuario}`, { method: "DELETE" });
+          const res = await fetch(`${API}/vagas/${id}?id_usuario=${user.id_usuario}`, {
+            method: "DELETE"
+          });
           if (res.ok) {
             localStorage.removeItem("trampos_user");
             showToast("Conta excluída.", "success");

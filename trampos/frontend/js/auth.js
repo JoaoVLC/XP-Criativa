@@ -46,7 +46,17 @@ function requireLogin() {
 
 function requireTipo(tipo) {
   const user = requireLogin();
-  if (user && user.tipo !== tipo) { window.location.href = "index.html"; return null; }
+
+  if (!user) return null;
+
+  if (user.tipo !== tipo) {
+    showToast("Você não tem permissão para acessar esta página.", "error");
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 800);
+    return null;
+  }
+
   return user;
 }
 
