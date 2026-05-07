@@ -11,8 +11,6 @@ router = APIRouter()
 def hash_password(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
-@router.post("/usuarios/{id_usuario}/avatar")
-
 @router.post("/usuarios", response_model=schemas.UsuarioOut, status_code=201)
 def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
     existente = db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first()
@@ -45,8 +43,12 @@ def buscar_usuario(id_usuario: int, db: Session = Depends(get_db)):
 def atualizar_usuario(
     id_usuario: int,
     dados: schemas.UsuarioUpdate,
+    id_usuario_atual: int,
     db: Session = Depends(get_db),
 ):
+    if id_usuario != id_usuario_atual:
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+
     usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
@@ -78,9 +80,12 @@ def atualizar_usuario(
 @router.post("/usuarios/{id_usuario}/avatar", response_model=schemas.UsuarioOut)
 def upload_avatar(
     id_usuario: int,
+    id_usuario_atual: int,
     avatar: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
+    if id_usuario != id_usuario_atual:
+        raise HTTPException(status_code=403, detail="Acesso negado.")
     usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
 
     if not usuario:
@@ -106,7 +111,9 @@ def upload_avatar(
     return usuario
 
 @router.delete("/usuarios/{id_usuario}", status_code=204)
-def deletar_usuario(id_usuario: int, db: Session = Depends(get_db)):
+def deletar_usuario(id_usuario: int, id_usuario_atual: int, db: Session = Depends(get_db)):
+    if id_usuario != id_usuario_atual:
+        raise HTTPException(status_code=403, detail="Acesso negado.")
     usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")

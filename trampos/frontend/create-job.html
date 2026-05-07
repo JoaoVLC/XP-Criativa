@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trampos – Publicar Vaga</title>
   <link rel="stylesheet" href="css/styles.css" />
-  <script>
-    renderUserInfo();
-  </script>
 </head>
 <body>
 
@@ -77,6 +74,7 @@
 
 <script src="js/auth.js"></script>
 <script>
+  renderUserInfo();
   // Only empresa can access this page
   const user = requireTipo("empresa");
   if (!user) throw new Error();

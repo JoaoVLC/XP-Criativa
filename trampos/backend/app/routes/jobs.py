@@ -27,6 +27,21 @@ def deletar_categoria(id_categoria: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Categoria não encontrada.")
     db.delete(db_categoria)
     db.commit()
+
+
+@router.get("/categorias", response_model=list[schemas.CategoriaOut])
+def listar_categorias(db: Session = Depends(get_db)):
+    return db.query(models.Categoria).all()
+
+
+@router.post("/categorias", response_model=schemas.CategoriaOut, status_code=201)
+def criar_categoria(categoria: schemas.CategoriaCreate, db: Session = Depends(get_db)):
+    nova = models.Categoria(**categoria.model_dump())
+    db.add(nova)
+    db.commit()
+    db.refresh(nova)
+    return nova
+
 # ── Vagas ─────────────────────────────────────────────────────────────────────
 
 @router.post("/vagas", response_model=schemas.VagaOut, status_code=201)

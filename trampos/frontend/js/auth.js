@@ -78,7 +78,7 @@ function renderNav(active = "") {
         : ''}
       ${user
         ? `<a href="profile.html" class="nav-user ${active === 'perfil' ? 'active' : ''}">
-             <span class="nav-avatar">${user.nome[0].toUpperCase()}</span>
+             <span class="nav-avatar">${user.avatar_url ? `<img src="${user.avatar_url}" alt="Avatar de ${user.nome}" />` : user.nome[0].toUpperCase()}</span>
              ${user.nome.split(' ')[0]}
            </a>
            <button class="btn-nav-ghost" onclick="logout()">Sair</button>`
@@ -91,14 +91,20 @@ function renderNav(active = "") {
 function toggleNav() {
   document.getElementById("nav-menu")?.classList.toggle("open");
 }
+
 function renderUserInfo() {
   const userInfo = document.getElementById("user-info");
   const user = getUser();
-  if (user && userInfo) {
-    userInfo.innerHTML = `
-      <p>Bem-vindo, <strong>${user.nome}</strong> (${user.tipo === "empresa" ? "Empresa" : "Freelancer"})</p>
-    `;
-  }
+  if (!user || !userInfo) return;
+
+  userInfo.innerHTML = `
+    <div class="user-summary">
+      <span class="nav-avatar">${user.avatar_url ? `<img src="${user.avatar_url}" alt="Avatar de ${user.nome}" />` : user.nome[0].toUpperCase()}</span>
+      <div>
+        <p>Bem-vindo, <strong>${user.nome}</strong></p>
+        <p class="user-role">${user.tipo === "empresa" ? "Empresa" : "Freelancer"}</p>
+      </div>
+    </div>`;
 }
 
 /* ── Toast notifications ──────────────────────────────────── */
