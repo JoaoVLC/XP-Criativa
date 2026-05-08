@@ -1,15 +1,17 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.database import engine, Base
-from app.routes import jobs, users, auth
-import os
-from fastapi.staticfiles import StaticFiles
-Base.metadata.create_all(bind=engine)
+from .routes import auth, jobs, users
 
 app = FastAPI(title="Trampos API", version="2.0.0")
-os.makedirs("uploads/avatars", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+UPLOADS_DIR = BACKEND_DIR / "uploads"
+AVATARS_DIR = UPLOADS_DIR / "avatars"
+
+AVATARS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,7 +22,6 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(jobs.router)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
 def root():

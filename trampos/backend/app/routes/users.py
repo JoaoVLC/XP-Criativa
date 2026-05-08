@@ -1,121 +1,140 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy.orm import Session
 import bcrypt
-from app.database import get_db
-from app import models, schemas
 import os
+from pathlib import Path
 import shutil
+from ..database import get_db
+from .. import schemas
+
 router = APIRouter()
+AVATARS_DIR = Path(__file__).resolve().parents[2] / 'uploads' / 'avatars'
 
 
 def hash_password(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
-@router.post("/usuarios", response_model=schemas.UsuarioOut, status_code=201)
-def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    existente = db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first()
-    if existente:
-        raise HTTPException(status_code=400, detail="Email já cadastrado.")
 
-    dados = usuario.model_dump()
-    dados["senha"] = hash_password(dados["senha"])
-    db_usuario = models.Usuario(**dados)
-    db.add(db_usuario)
-    db.commit()
-    db.refresh(db_usuario)
-    return db_usuario
+@router.post('/usuarios', response_model=schemas.UsuarioOut, status_code=201)
+def criar_usuario(usuario: schemas.UsuarioCreate, db=Depends(get_db)):
+    with db.cursor() as cur:
+        cur.execute('SELECT 1 FROM Usuario WHERE email = %s', (usuario.email,))
+        if cur.fetchone():
+            raise HTTPException(status_code=400, detail='Email já cadastrado.')
+        senha_hash = hash_password(usuario.senha)
+        cur.execute(
+            'INSERT INTO Usuario (nome, email, senha, tipo) VALUES (%s, %s, %s, %s)',
+            (usuario.nome, usuario.email, senha_hash, usuario.tipo),
+        )
+        db.commit()
+        usuario_id = cur.lastrowid
+        cur.execute('SELECT id_usuario, nome, email, tipo, avatar_url FROM Usuario WHERE id_usuario = %s', (usuario_id,))
+        usuario_data = cur.fetchone()
+    return usuario_data
 
 
-@router.get("/usuarios", response_model=list[schemas.UsuarioOut])
-def listar_usuarios(db: Session = Depends(get_db)):
-    return db.query(models.Usuario).all()
+@router.get('/usuarios', response_model=list[schemas.UsuarioOut])
+def listar_usuarios(db=Depends(get_db)):
+    with db.cursor() as cur:
+        cur.execute('SELECT id_usuario, nome, email, tipo, avatar_url FROM Usuario')
+        return cur.fetchall()
 
 
-@router.get("/usuarios/{id_usuario}", response_model=schemas.UsuarioOut)
-def buscar_usuario(id_usuario: int, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
+@router.get('/usuarios/{id_usuario}', response_model=schemas.UsuarioOut)
+def buscar_usuario(id_usuario: int, db=Depends(get_db)):
+    with db.cursor() as cur:
+        cur.execute('SELECT id_usuario, nome, email, tipo, avatar_url FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        usuario = cur.fetchone()
     if not usuario:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+        raise HTTPException(status_code=404, detail='Usuário não encontrado.')
     return usuario
 
 
-@router.put("/usuarios/{id_usuario}", response_model=schemas.UsuarioOut)
+@router.put('/usuarios/{id_usuario}', response_model=schemas.UsuarioOut)
 def atualizar_usuario(
     id_usuario: int,
     dados: schemas.UsuarioUpdate,
     id_usuario_atual: int,
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     if id_usuario != id_usuario_atual:
-        raise HTTPException(status_code=403, detail="Acesso negado.")
-
-    usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+        raise HTTPException(status_code=403, detail='Acesso negado.')
 
     update_data = dados.model_dump(exclude_unset=True)
+    if not update_data:
+        with db.cursor() as cur:
+            cur.execute('SELECT id_usuario, nome, email, tipo, avatar_url FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+            usuario = cur.fetchone()
+            if not usuario:
+                raise HTTPException(status_code=404, detail='Usuário não encontrado.')
+            return usuario
 
-    if "email" in update_data:
-        em_uso = (
-            db.query(models.Usuario)
-            .filter(
-                models.Usuario.email == update_data["email"],
-                models.Usuario.id_usuario != id_usuario,
-            )
-            .first()
-        )
-        if em_uso:
-            raise HTTPException(status_code=400, detail="Email já em uso por outro usuário.")
+    with db.cursor() as cur:
+        cur.execute('SELECT id_usuario FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail='Usuário não encontrado.')
 
-    if "senha" in update_data:
-        update_data["senha"] = hash_password(update_data["senha"])
+        if 'email' in update_data:
+            cur.execute('SELECT id_usuario FROM Usuario WHERE email = %s AND id_usuario != %s', (update_data['email'], id_usuario))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail='Email já em uso por outro usuário.')
 
-    for campo, valor in update_data.items():
-        setattr(usuario, campo, valor)
+        if 'senha' in update_data:
+            update_data['senha'] = hash_password(update_data['senha'])
 
-    db.commit()
-    db.refresh(usuario)
+        fields = []
+        values = []
+        for campo, valor in update_data.items():
+            fields.append(f"{campo} = %s")
+            values.append(valor)
+        values.append(id_usuario)
+        cur.execute(f"UPDATE Usuario SET {', '.join(fields)} WHERE id_usuario = %s", tuple(values))
+        db.commit()
+        cur.execute('SELECT id_usuario, nome, email, tipo, avatar_url FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        usuario = cur.fetchone()
     return usuario
-    
-@router.post("/usuarios/{id_usuario}/avatar", response_model=schemas.UsuarioOut)
+
+
+@router.post('/usuarios/{id_usuario}/avatar', response_model=schemas.UsuarioOut)
 def upload_avatar(
     id_usuario: int,
     id_usuario_atual: int,
     avatar: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    db=Depends(get_db),
 ):
     if id_usuario != id_usuario_atual:
-        raise HTTPException(status_code=403, detail="Acesso negado.")
-    usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
+        raise HTTPException(status_code=403, detail='Acesso negado.')
 
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    with db.cursor() as cur:
+        cur.execute('SELECT id_usuario FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail='Usuário não encontrado.')
 
-    if not avatar.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Envie apenas arquivos de imagem.")
+    if not avatar.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail='Envie apenas arquivos de imagem.')
 
-    os.makedirs("uploads/avatars", exist_ok=True)
-
+    AVATARS_DIR.mkdir(parents=True, exist_ok=True)
     extensao = os.path.splitext(avatar.filename)[1]
-    nome_arquivo = f"user_{id_usuario}{extensao}"
-    caminho = os.path.join("uploads", "avatars", nome_arquivo)
-
-    with open(caminho, "wb") as buffer:
+    nome_arquivo = f'user_{id_usuario}{extensao}'
+    caminho = AVATARS_DIR / nome_arquivo
+    with open(caminho, 'wb') as buffer:
         shutil.copyfileobj(avatar.file, buffer)
 
-    usuario.avatar_url = f"http://localhost:8000/uploads/avatars/{nome_arquivo}"
-
-    db.commit()
-    db.refresh(usuario)
-
+    avatar_url = f'http://localhost:8000/uploads/avatars/{nome_arquivo}'
+    with db.cursor() as cur:
+        cur.execute('UPDATE Usuario SET avatar_url = %s WHERE id_usuario = %s', (avatar_url, id_usuario))
+        db.commit()
+        cur.execute('SELECT id_usuario, nome, email, tipo, avatar_url FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        usuario = cur.fetchone()
     return usuario
 
-@router.delete("/usuarios/{id_usuario}", status_code=204)
-def deletar_usuario(id_usuario: int, id_usuario_atual: int, db: Session = Depends(get_db)):
+
+@router.delete('/usuarios/{id_usuario}', status_code=204)
+def deletar_usuario(id_usuario: int, id_usuario_atual: int, db=Depends(get_db)):
     if id_usuario != id_usuario_atual:
-        raise HTTPException(status_code=403, detail="Acesso negado.")
-    usuario = db.query(models.Usuario).filter(models.Usuario.id_usuario == id_usuario).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    db.delete(usuario)
-    db.commit()
+        raise HTTPException(status_code=403, detail='Acesso negado.')
+    with db.cursor() as cur:
+        cur.execute('SELECT id_usuario FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail='Usuário não encontrado.')
+        cur.execute('DELETE FROM Usuario WHERE id_usuario = %s', (id_usuario,))
+        db.commit()

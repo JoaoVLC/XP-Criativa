@@ -8,7 +8,7 @@ Projeto da disciplina Experiência Criativa
 Plataforma simples para conectar pequenos negócios que precisam de trabalhadores temporários com pessoas em busca de bicos rápidos.
 
 ### Stack
-- **Backend:** Python + FastAPI + SQLAlchemy
+- **Backend:** Python + FastAPI + PyMySQL
 - **Banco de dados:** MySQL
 - **Frontend:** HTML + CSS + JavaScript puro
 
@@ -22,7 +22,7 @@ trampos/
 │   ├── app/
 │   │   ├── main.py          # Entrypoint FastAPI
 │   │   ├── database.py      # Conexão com MySQL
-│   │   ├── models.py        # Modelos SQLAlchemy
+│   │   ├── models.py        # Arquivo de modelos legado
 │   │   ├── schemas.py       # Schemas Pydantic
 │   │   └── routes/
 │   │       ├── jobs.py      # Rotas de vagas e candidaturas

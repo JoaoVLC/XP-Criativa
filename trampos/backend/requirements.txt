@@ -1,8 +1,8 @@
 fastapi
 uvicorn[standard]
-sqlalchemy
 pymysql
-pydantic[email]
+pydantic
+email-validator
 python-dotenv
 passlib[bcrypt]
-passlib
+python-multipart

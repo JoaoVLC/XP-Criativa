@@ -62,9 +62,9 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailInput.value.trim(), senha: senhaInput.value }),
       });
-      const data = await res.json();
+      const data = await readResponseData(res);
       if (!res.ok) {
-        showToast(data.detail || "Erro ao entrar.", "error");
+        showToast(data?.detail || "Erro ao entrar.", "error");
       } else {
         setUser(data);
         window.location.href = "index.html";

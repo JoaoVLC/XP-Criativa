@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trampos – Vagas Disponíveis</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
+
 <body>
 
   <nav id="main-nav"></nav>
 
   <div id="user-info" class="user-info"></div>
-  
+
   <div class="container">
     <div class="page-header">
       <div>
@@ -26,59 +28,66 @@
       </div>
     </div>
 
-  <div id="job-list" class="job-list">
-    <div class="skeleton-list">
-      <div class="skeleton card-skeleton"></div>
-      <div class="skeleton card-skeleton"></div>
-      <div class="skeleton card-skeleton"></div>
+    <div id="job-list" class="job-list">
+      <div class="skeleton-list">
+        <div class="skeleton card-skeleton"></div>
+        <div class="skeleton card-skeleton"></div>
+        <div class="skeleton card-skeleton"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="js/auth.js"></script>
-<script>
-  renderUserInfo();
-  renderNav("vagas");
+  <script src="js/auth.js"></script>
+  <script>
+    renderUserInfo();
+    renderNav("vagas");
 
-  let todasVagas = [];
+    let todasVagas = [];
 
-  async function carregarCategorias() {
-    try {
-      const cats = await (await fetch(`${API}/categorias`)).json();
-      const sel  = document.getElementById("filter-cat");
-      cats.forEach(c => {
-        const o = document.createElement("option");
-        o.value = c.id_categoria; o.textContent = c.nome;
-        sel.appendChild(o);
-      });
-    } catch {}
-  }
-
-  async function carregarVagas() {
-    const list = document.getElementById("job-list");
-    try {
-      const res = await fetch(`${API}/vagas`);
-      todasVagas = await res.json();
-      renderVagas(todasVagas);
-    } catch {
-      list.innerHTML = `<div class="empty-state"><span>⚠️</span><p>Erro ao carregar vagas. Verifique se o servidor está rodando.</p></div>`;
+    async function carregarCategorias() {
+      try {
+        const res = await fetch(`${API}/categorias`);
+        const cats = await readResponseData(res);
+        if (!res.ok || !Array.isArray(cats)) return;
+        const sel = document.getElementById("filter-cat");
+        cats.forEach(c => {
+          const o = document.createElement("option");
+          o.value = c.id_categoria; o.textContent = c.nome;
+          sel.appendChild(o);
+        });
+      } catch { }
     }
-  }
 
-  function renderVagas(vagas) {
-    const list = document.getElementById("job-list");
-    if (!vagas.length) {
-      list.innerHTML = `<div class="empty-state"><span>🔍</span><p>Nenhuma vaga encontrada.</p></div>`;
-      return;
+    async function carregarVagas() {
+      const list = document.getElementById("job-list");
+      try {
+        const res = await fetch(`${API}/vagas`);
+        const data = await readResponseData(res);
+        if (!res.ok || !Array.isArray(data)) {
+          const msg = data?.detail || "Erro ao carregar vagas. Verifique se o servidor está rodando.";
+          throw new Error(msg);
+        }
+        todasVagas = data;
+        renderVagas(todasVagas);
+      } catch (error) {
+        list.innerHTML = `<div class="empty-state"><span>⚠️</span><p>${error.message || "Erro ao carregar vagas. Verifique se o servidor está rodando."}</p></div>`;
+      }
     }
-    list.innerHTML = vagas.map(v => `
+
+    function renderVagas(vagas) {
+      const list = document.getElementById("job-list");
+      if (!vagas.length) {
+        list.innerHTML = `<div class="empty-state"><span>🔍</span><p>Nenhuma vaga encontrada.</p></div>`;
+        return;
+      }
+      list.innerHTML = vagas.map(v => `
       <div class="job-card">
         <div class="job-card-body">
           <div class="job-card-header">
             ${v.categoria ? `<span class="badge badge-secondary">${v.categoria.nome}</span>` : ""}
           </div>
           <h2 class="job-card-title"><a href="job.html?id=${v.id_vaga}">${v.titulo}</a></h2>
-          <p class="job-card-desc">${v.descricao.substring(0,110)}${v.descricao.length > 110 ? "…" : ""}</p>
+          <p class="job-card-desc">${v.descricao.substring(0, 110)}${v.descricao.length > 110 ? "…" : ""}</p>
           <div class="job-card-meta">
             <span>📍 ${v.local}</span>
             <span>📅 ${formatDate(v.data)}</span>
@@ -90,22 +99,23 @@
           <a href="job.html?id=${v.id_vaga}" class="btn btn-primary btn-sm">Ver detalhes</a>
         </div>
       </div>`).join("");
-  }
+    }
 
-  function filtrar() {
-    const termo = document.getElementById("search").value.toLowerCase();
-    const catId = document.getElementById("filter-cat").value;
-    renderVagas(todasVagas.filter(v =>
-      (!termo || v.titulo.toLowerCase().includes(termo) || v.local.toLowerCase().includes(termo) || v.descricao.toLowerCase().includes(termo)) &&
-      (!catId || String(v.id_categoria) === catId)
-    ));
-  }
+    function filtrar() {
+      const termo = document.getElementById("search").value.toLowerCase();
+      const catId = document.getElementById("filter-cat").value;
+      renderVagas(todasVagas.filter(v =>
+        (!termo || v.titulo.toLowerCase().includes(termo) || v.local.toLowerCase().includes(termo) || v.descricao.toLowerCase().includes(termo)) &&
+        (!catId || String(v.id_categoria) === catId)
+      ));
+    }
 
-  document.getElementById("search").addEventListener("input", filtrar);
-  document.getElementById("filter-cat").addEventListener("change", filtrar);
+    document.getElementById("search").addEventListener("input", filtrar);
+    document.getElementById("filter-cat").addEventListener("change", filtrar);
 
-  carregarCategorias();
-  carregarVagas();
-</script>
+    carregarCategorias();
+    carregarVagas();
+  </script>
 </body>
+
 </html>

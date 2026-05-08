@@ -74,16 +74,16 @@ function renderNav(active = "") {
     <div class="nav-menu" id="nav-menu">
       <a href="index.html" class="${active === 'vagas' ? 'active' : ''}">Vagas</a>
       ${user && user.tipo === 'empresa'
-        ? `<a href="create-job.html" class="${active === 'criar' ? 'active' : ''}">Publicar Vaga</a>`
-        : ''}
+      ? `<a href="create-job.html" class="${active === 'criar' ? 'active' : ''}">Publicar Vaga</a>`
+      : ''}
       ${user
-        ? `<a href="profile.html" class="nav-user ${active === 'perfil' ? 'active' : ''}">
+      ? `<a href="profile.html" class="nav-user ${active === 'perfil' ? 'active' : ''}">
              <span class="nav-avatar">${user.avatar_url ? `<img src="${user.avatar_url}" alt="Avatar de ${user.nome}" />` : user.nome[0].toUpperCase()}</span>
              ${user.nome.split(' ')[0]}
            </a>
            <button class="btn-nav-ghost" onclick="logout()">Sair</button>`
-        : `<a href="login.html" class="btn-nav-primary ${active === 'login' ? 'active' : ''}">Entrar</a>`
-      }
+      : `<a href="login.html" class="btn-nav-primary ${active === 'login' ? 'active' : ''}">Entrar</a>`
+    }
     </div>
   `;
 }
@@ -156,11 +156,11 @@ function closeModal() {
 /* ── Form validation ──────────────────────────────────────── */
 
 const regex = {
-  email:     /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/,
-  nome:      /^[a-zA-ZÀ-ÿ\s]{3,100}$/,
-  senha:     /^.{6,}$/,
-  titulo:    /^.{5,}$/,
-  local:     /^.{3,}$/,
+  email: /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/,
+  nome: /^[a-zA-ZÀ-ÿ\s]{3,100}$/,
+  senha: /^.{6,}$/,
+  titulo: /^.{5,}$/,
+  local: /^.{3,}$/,
   descricao: /^[\s\S]{20,}$/,
 };
 
@@ -172,7 +172,7 @@ function validate(input, rule, msg) {
 
 function setFieldState(input, valid, msg = "") {
   input.classList.toggle("input-error", !valid);
-  input.classList.toggle("input-ok",    valid && input.value.trim() !== "");
+  input.classList.toggle("input-ok", valid && input.value.trim() !== "");
   const err = input.closest(".form-group")?.querySelector(".field-error");
   if (err) err.textContent = msg;
 }
@@ -185,6 +185,17 @@ function clearValidation(form) {
 }
 
 /* ── Helpers ──────────────────────────────────────────────── */
+
+async function readResponseData(response) {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { detail: text };
+  }
+}
 
 function formatDate(str) {
   if (!str) return "";
