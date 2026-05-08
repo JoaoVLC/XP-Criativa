@@ -59,14 +59,17 @@ source venv/bin/activate        # Linux/Mac
 # venv\Scripts\activate         # Windows
 
 # Instale as dependências
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 # Configure o banco (copie e edite o .env)
 cp .env.example .env
 # Edite DATABASE_URL em .env se necessário
 
 # Rode o servidor
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
+
+# Ou, a partir da raiz do projeto:
+python -m uvicorn trampos.backend.app.main:app --reload
 ```
 
 O servidor sobe em **http://localhost:8000**
