@@ -8,9 +8,10 @@ Projeto da disciplina Experiência Criativa
 Plataforma simples para conectar pequenos negócios que precisam de trabalhadores temporários com pessoas em busca de bicos rápidos.
 
 ### Stack
-- **Backend:** Python + FastAPI + SQLAlchemy
+- **Backend:** Python + FastAPI + Jinja
 - **Banco de dados:** MySQL
-- **Frontend:** HTML + CSS + JavaScript puro
+- **Sessão e formulários:** SessionMiddleware + POST/Redirect/GET
+- **Acesso a dados:** PyMySQL com SQL direto
 
 ---
 
@@ -21,20 +22,14 @@ trampos/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py          # Entrypoint FastAPI
-│   │   ├── database.py      # Conexão com MySQL
-│   │   ├── models.py        # Modelos SQLAlchemy
-│   │   ├── schemas.py       # Schemas Pydantic
-│   │   └── routes/
-│   │       ├── jobs.py      # Rotas de vagas e candidaturas
-│   │       └── users.py     # Rotas de usuários
+│   │   └── database.py      # Conexão com MySQL sem ORM
+│   ├── static/
+│   │   └── css/styles.css   # Estilos servidos pelo FastAPI
+│   ├── templates/           # Templates Jinja server-side
 │   ├── requirements.txt
-│   └── .env.example
-└── frontend/
-    ├── index.html       # Lista de vagas
-    ├── job.html         # Detalhes da vaga + candidatura
-    ├── create-job.html  # Formulário para criar vaga
-    └── css/
-        └── styles.css
+│   ├── seed.py              # Recria e popula o banco a partir do SQL
+│   └── trampos.sql
+└── frontend/                # Protótipos originais mantidos no repositório
 ```
 
 ---
@@ -43,9 +38,10 @@ trampos/
 
 #### 1. Banco de dados
 
-Crie o banco no MySQL:
-```sql
-CREATE DATABASE trampos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+O backend usa a variável `DATABASE_URL`. Exemplo:
+
+```bash
+DATABASE_URL=mysql+pymysql://root:123456@localhost/trampos
 ```
 
 #### 2. Backend
@@ -61,9 +57,12 @@ source venv/bin/activate        # Linux/Mac
 # Instale as dependências
 pip install -r requirements.txt
 
-# Configure o banco (copie e edite o .env)
-cp .env.example .env
-# Edite DATABASE_URL em .env se necessário
+# Configure o banco no arquivo .env
+# Exemplo:
+# DATABASE_URL=mysql+pymysql://root:123456@localhost/trampos
+
+# Crie e popule o banco
+python seed.py
 
 # Rode o servidor
 uvicorn app.main:app --reload
@@ -72,37 +71,28 @@ uvicorn app.main:app --reload
 O servidor sobe em **http://localhost:8000**
 Documentação automática em **http://localhost:8000/docs**
 
-#### 3. Frontend
-
-Abra o arquivo `trampos/frontend/index.html` no navegador — ou sirva com:
-
-```bash
-cd trampos/frontend
-python -m http.server 3000
-# Acesse http://localhost:3000
-```
-
 ---
 
 ### Fluxo de uso
 
-1. **Crie usuários** via `POST /users` (ou pela interface `/docs`):
-   - Um `employer` (empregador) e um `worker` (trabalhador)
-2. **Empregador cria vagas** em `create-job.html` usando seu ID
-3. **Trabalhador vê vagas** em `index.html` e se candidata em `job.html`
-4. A vaga mostra a lista de candidatos em tempo real
+1. **Acesse `/`** para listar vagas com filtro por texto e categoria.
+2. **Cadastre-se** como empresa ou freelancer.
+3. **Empresas** publicam vagas e acompanham candidatos.
+4. **Freelancers** se candidatam e acompanham o status pelo perfil.
 
 ---
 
-### Rotas da API
+### Rotas principais
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| POST | `/users` | Criar usuário |
-| GET | `/users` | Listar usuários |
-| GET | `/users/{id}` | Buscar usuário |
-| POST | `/jobs` | Criar vaga |
-| GET | `/jobs` | Listar vagas |
-| GET | `/jobs/{id}` | Detalhe da vaga |
-| POST | `/apply` | Candidatar-se a uma vaga |
-| GET | `/jobs/{id}/applications` | Ver candidatos da vaga |
+| GET | `/` | Listagem de vagas |
+| GET/POST | `/login` | Login por formulário |
+| GET/POST | `/cadastro` | Cadastro de usuário |
+| GET | `/logout` | Encerrar sessão |
+| GET/POST | `/vaga/nova` | Publicar vaga |
+| GET | `/vaga/{id_vaga}` | Detalhe da vaga |
+| POST | `/vaga/{id_vaga}/candidatar` | Enviar candidatura |
+| POST | `/candidaturas/{id_candidatura}/status` | Aceitar ou recusar candidatura |
+| GET/POST | `/perfil` | Visualizar e editar perfil |
+| POST | `/perfil/excluir` | Excluir conta |

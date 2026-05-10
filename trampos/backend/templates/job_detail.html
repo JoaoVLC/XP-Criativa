@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container">
+    <div class="card mb-4">
+      <a href="{{ url_for('home') }}" class="back-link">← Voltar para as vagas</a>
+
+      <div style="margin-top: 0.75rem;">
+        {% if vaga.categoria_nome %}
+          <span class="badge badge-secondary mb-2">{{ vaga.categoria_nome }}</span>
+        {% endif %}
+
+        <h1 style="font-size: 1.6rem; font-weight: 700; margin: 0.4rem 0;">{{ vaga.titulo }}</h1>
+
+        <div class="detail-tags">
+          <span class="tag">📍 {{ vaga.local }}</span>
+          <span class="tag">📅 {{ vaga.data|date_br }}</span>
+          <span class="tag tag-green">💰 {{ vaga.pagamento|money_br }}</span>
+          <span class="tag">🏢 {{ vaga.empresa_nome }}</span>
+        </div>
+
+        <div class="detail-desc">{{ vaga.descricao }}</div>
+      </div>
+    </div>
+
+    {% if not user %}
+      <div class="info-banner">
+        Faca <a href="{{ url_for('login_page') }}">login</a> ou <a href="{{ url_for('register_page') }}">cadastre-se</a> para se candidatar.
+      </div>
+    {% elif is_freelancer %}
+      <div class="card mb-4">
+        <h3 style="margin-bottom: 0.5rem;">Candidatar-se</h3>
+        <p style="color: var(--gray-600); font-size: 0.9rem; margin-bottom: 1rem;">
+          Candidatando como <strong>{{ user.nome }}</strong>
+        </p>
+
+        {% if ja_candidatado %}
+          <div class="info-banner" style="margin-bottom: 0;">
+            Voce ja se candidatou a esta vaga.
+          </div>
+        {% else %}
+          <form method="post" action="{{ url_for('apply_to_job', id_vaga=vaga.id_vaga) }}">
+            <button type="submit" class="btn btn-success">Enviar candidatura</button>
+          </form>
+        {% endif %}
+      </div>
+    {% elif is_owner %}
+      <div class="info-banner">
+        Esta vaga pertence a sua empresa. Use a lista abaixo para acompanhar e decidir sobre os candidatos.
+      </div>
+    {% endif %}
+
+    {% if total_candidaturas %}
+      <div class="info-banner">
+        👥 {{ total_candidaturas }} candidato(s) nesta vaga.
+      </div>
+    {% endif %}
+
+    {% if is_owner %}
+      <div class="card mb-4">
+        <div class="form-actions" style="justify-content: space-between;">
+          <h3>Candidatos</h3>
+          <a href="{{ url_for('delete_job_page', id_vaga=vaga.id_vaga) }}" class="btn btn-outline btn-sm">Excluir vaga</a>
+        </div>
+
+        {% if candidaturas %}
+          <div class="candidatos-list">
+            {% for candidatura in candidaturas %}
+              <div class="candidato-item">
+                {% if candidatura.avatar_data %}
+                  <img src="{{ candidatura.avatar_data }}" alt="Avatar de {{ candidatura.usuario_nome }}" class="avatar-lg-image" />
+                {% else %}
+                  <div class="avatar-lg">{{ avatar_initial(candidatura.usuario_nome) }}</div>
+                {% endif %}
+
+                <div class="candidato-info">
+                  <strong>{{ candidatura.usuario_nome }}</strong>
+                  <div style="font-size: 0.82rem; color: var(--gray-600);">{{ candidatura.usuario_email }}</div>
+                </div>
+
+                <div class="candidato-actions">
+                  <span class="badge badge-{{ status_class(candidatura.status) }}">
+                    {{ status_label(candidatura.status) }}
+                  </span>
+
+                  {% if candidatura.status == 'pendente' %}
+                    <form method="post" action="{{ url_for('update_application_status', id_candidatura=candidatura.id_candidatura) }}" style="display: inline;">
+                      <button type="submit" name="status" value="aceito" class="btn btn-success btn-sm">Aceitar</button>
+                    </form>
+                    <form method="post" action="{{ url_for('update_application_status', id_candidatura=candidatura.id_candidatura) }}" style="display: inline;">
+                      <button type="submit" name="status" value="recusado" class="btn btn-outline btn-sm">Recusar</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty-small">Nenhum candidato ainda.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

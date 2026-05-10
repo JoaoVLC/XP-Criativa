@@ -1,0 +1,43 @@
+<nav id="main-nav">
+  <div class="nav-brand">
+    <a href="{{ url_for('home') }}">
+      <img src="{{ url_for('static', path='img/logo.png') }}" alt="Trampos" class="nav-brand-logo" />
+      <span class="nav-brand-text">trampos</span>
+    </a>
+  </div>
+
+  <button class="nav-toggle" type="button" onclick="toggleNav()" aria-label="Abrir menu">
+    &#9776;
+  </button>
+
+  <div class="nav-menu" id="nav-menu">
+    <a href="{{ url_for('home') }}" class="{{ 'active' if active_page == 'vagas' else '' }}">
+      Vagas
+    </a>
+
+    {% if user and user.tipo == 'empresa' %}
+      <a href="{{ url_for('create_job_page') }}" class="{{ 'active' if active_page == 'criar' else '' }}">
+        Publicar Vaga
+      </a>
+    {% endif %}
+
+    {% if user %}
+      <a href="{{ url_for('profile_page') }}" class="nav-user {{ 'active' if active_page == 'perfil' else '' }}">
+        {% if user_avatar_data %}
+          <img src="{{ user_avatar_data }}" alt="Avatar de {{ user.nome }}" class="nav-avatar-image" />
+        {% else %}
+          <span class="nav-avatar">{{ avatar_initial(user.nome) }}</span>
+        {% endif %}
+        {{ user.nome.split(' ')[0] }}
+      </a>
+      <a href="{{ url_for('logout') }}" class="btn-nav-ghost">Sair</a>
+    {% else %}
+      <a href="{{ url_for('login_page') }}" class="{{ 'active' if active_page == 'login' else '' }}">
+        Entrar
+      </a>
+      <a href="{{ url_for('register_page') }}" class="btn-nav-primary">
+        Cadastre-se
+      </a>
+    {% endif %}
+  </div>
+</nav>

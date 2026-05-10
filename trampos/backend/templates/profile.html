@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container">
+    <div class="profile-grid">
+      <div>
+        <div class="card mb-4">
+          <div class="profile-header profile-card-top">
+            {% if profile_user.avatar_data %}
+              <img src="{{ profile_user.avatar_data }}" alt="Avatar de {{ profile_user.nome }}" class="profile-avatar-image" />
+            {% else %}
+              <div class="profile-avatar">{{ avatar_initial(user.nome) }}</div>
+            {% endif %}
+            <div>
+              <h2 style="font-size: 1.15rem; font-weight: 700;">{{ profile_user.nome }}</h2>
+              <span class="badge badge-{{ 'primary' if user.tipo == 'empresa' else 'success' }}">
+                {{ '🏢 Empresa' if user.tipo == 'empresa' else '👷 Freelancer' }}
+              </span>
+            </div>
+          </div>
+
+          <form method="post" action="{{ url_for('upload_profile_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
+            <label for="avatar">Foto do perfil</label>
+            <div class="avatar-upload-row">
+              <input type="file" id="avatar" name="avatar" accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" />
+              <button type="submit" class="btn btn-ghost btn-sm">Enviar avatar</button>
+            </div>
+            <span class="helper-text">Formatos aceitos: PNG, JPG, GIF ou WEBP com ate 2 MB.</span>
+          </form>
+
+          <hr class="divider" />
+
+          <p class="section-title">Editar perfil</p>
+
+          <form method="post" action="{{ url_for('update_profile') }}" novalidate>
+            <div class="form-group">
+              <label for="nome">Nome</label>
+              <input type="text" id="nome" name="nome" value="{{ form_data.nome }}" class="{{ 'input-error' if errors.get('nome') else '' }}" />
+              <span class="field-error">{{ errors.get('nome', '') }}</span>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" value="{{ form_data.email }}" class="{{ 'input-error' if errors.get('email') else '' }}" />
+              <span class="field-error">{{ errors.get('email', '') }}</span>
+            </div>
+
+            <div class="form-group">
+              <label for="senha">Nova senha <small>(deixe em branco para manter)</small></label>
+              <div class="input-group">
+                <input type="password" id="senha" name="senha" class="{{ 'input-error' if errors.get('senha') else '' }}" />
+                <button type="button" class="input-toggle" onclick="toggleSenha('senha')">👁</button>
+              </div>
+              <span class="field-error">{{ errors.get('senha', '') }}</span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+          </form>
+
+          <hr class="divider" />
+
+          <a href="{{ url_for('delete_profile_page') }}" class="btn btn-outline">Excluir conta</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <p class="section-title">{{ 'Minhas vagas' if user.tipo == 'empresa' else 'Minhas candidaturas' }}</p>
+
+          {% if user.tipo == 'empresa' %}
+            {% for vaga in jobs %}
+              <div class="activity-item">
+                <div class="activity-info">
+                  <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="activity-title">{{ vaga.titulo }}</a>
+                  <div class="activity-meta">
+                    📍 {{ vaga.local }} · 📅 {{ vaga.data|date_br }} · 💰 {{ vaga.pagamento|money_br }}
+                    {% if vaga.categoria_nome %} · {{ vaga.categoria_nome }}{% endif %}
+                  </div>
+                </div>
+
+                <span class="badge badge-secondary">{{ vaga.total_candidaturas }} candidato(s)</span>
+              </div>
+            {% else %}
+              <p class="empty-small">
+                Nenhuma vaga publicada ainda.<br />
+                <a href="{{ url_for('create_job_page') }}" class="btn btn-primary btn-sm empty-action">Publicar vaga</a>
+              </p>
+            {% endfor %}
+          {% else %}
+            {% for candidatura in applications %}
+              <div class="activity-item">
+                <div class="activity-info">
+                  <a href="{{ url_for('job_detail', id_vaga=candidatura.id_vaga) }}" class="activity-title">{{ candidatura.titulo }}</a>
+                  <div class="activity-meta">
+                    📍 {{ candidatura.local }} · 📅 {{ candidatura.data|date_br }} · 🏢 {{ candidatura.empresa_nome }}
+                    {% if candidatura.categoria_nome %} · {{ candidatura.categoria_nome }}{% endif %}
+                  </div>
+                </div>
+
+                <span class="badge badge-{{ status_class(candidatura.status) }}">
+                  {{ status_label(candidatura.status) }}
+                </span>
+              </div>
+            {% else %}
+              <p class="empty-small">
+                Nenhuma candidatura ainda.<br />
+                <a href="{{ url_for('home') }}" class="btn btn-primary btn-sm empty-action">Ver vagas</a>
+              </p>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

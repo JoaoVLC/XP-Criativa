@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img src="{{ url_for('static', path='img/logo.png') }}" alt="Trampos" class="auth-logo-image" />
+      </div>
+      <h1 class="auth-title">Criar conta</h1>
+
+      <form method="post" action="{{ url_for('register') }}" novalidate>
+        <div class="form-group">
+          <label for="nome">Nome completo <span class="required">*</span></label>
+          <input
+            type="text"
+            id="nome"
+            name="nome"
+            value="{{ form_data.nome }}"
+            class="{{ 'input-error' if errors.get('nome') else '' }}"
+            autocomplete="name"
+          />
+          <span class="field-error">{{ errors.get('nome', '') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email <span class="required">*</span></label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="{{ form_data.email }}"
+            class="{{ 'input-error' if errors.get('email') else '' }}"
+            autocomplete="email"
+          />
+          <span class="field-error">{{ errors.get('email', '') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de conta <span class="required">*</span></label>
+          <div class="tipo-selector">
+            <label class="tipo-option">
+              <input type="radio" name="tipo" value="freelancer" {% if form_data.tipo == 'freelancer' %}checked{% endif %} />
+              <div class="tipo-card">
+                <span class="tipo-icon">👷</span>
+                <strong>Freelancer</strong>
+                <small>Busco trabalhos</small>
+              </div>
+            </label>
+            <label class="tipo-option">
+              <input type="radio" name="tipo" value="empresa" {% if form_data.tipo == 'empresa' %}checked{% endif %} />
+              <div class="tipo-card">
+                <span class="tipo-icon">🏢</span>
+                <strong>Empresa</strong>
+                <small>Ofereco vagas</small>
+              </div>
+            </label>
+          </div>
+          <span class="field-error">{{ errors.get('tipo', '') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha <span class="required">*</span></label>
+          <div class="input-group">
+            <input
+              type="password"
+              id="senha"
+              name="senha"
+              class="{{ 'input-error' if errors.get('senha') else '' }}"
+              autocomplete="new-password"
+            />
+            <button type="button" class="input-toggle" onclick="toggleSenha('senha')">👁</button>
+          </div>
+          <span class="field-error">{{ errors.get('senha', '') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmar">Confirmar senha <span class="required">*</span></label>
+          <div class="input-group">
+            <input
+              type="password"
+              id="confirmar"
+              name="confirmar"
+              class="{{ 'input-error' if errors.get('confirmar') else '' }}"
+              autocomplete="new-password"
+            />
+            <button type="button" class="input-toggle" onclick="toggleSenha('confirmar')">👁</button>
+          </div>
+          <span class="field-error">{{ errors.get('confirmar', '') }}</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Criar conta</button>
+      </form>
+
+      <p class="auth-footer">
+        Ja tem conta?
+        <a href="{{ url_for('login_page') }}">Entrar</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

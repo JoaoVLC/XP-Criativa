@@ -27,6 +27,8 @@ CREATE TABLE Usuario (
     email       VARCHAR(100) NOT NULL,
     senha       VARCHAR(255) NOT NULL,
     tipo        ENUM('empresa', 'freelancer') NOT NULL,
+    avatar      LONGBLOB     NULL,
+    avatar_mime VARCHAR(50)  NULL,
     PRIMARY KEY (id_usuario),
     UNIQUE KEY uq_usuario_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
