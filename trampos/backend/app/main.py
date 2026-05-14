@@ -48,6 +48,17 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
+def static_asset_url(request: Request, path: str) -> str:
+    normalized_path = path.lstrip("/")
+    asset_path = STATIC_DIR / normalized_path
+    asset_url = str(request.url_for("static", path=normalized_path))
+
+    if asset_path.is_file():
+        return f"{asset_url}?v={int(asset_path.stat().st_mtime)}"
+
+    return asset_url
+
+
 def format_date_br(value: Any) -> str:
     if not value:
         return ""
@@ -106,6 +117,7 @@ def enrich_avatar(record: dict[str, Any] | None, *, avatar_key: str = "avatar", 
 templates.env.filters["date_br"] = format_date_br
 templates.env.filters["money_br"] = format_money_br
 templates.env.globals["avatar_initial"] = avatar_initial
+templates.env.globals["static_asset_url"] = static_asset_url
 templates.env.globals["status_label"] = lambda status_value: STATUS_LABELS.get(status_value, status_value)
 templates.env.globals["status_class"] = lambda status_value: STATUS_CLASSES.get(status_value, "secondary")
 

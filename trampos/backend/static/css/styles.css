@@ -236,6 +236,10 @@ a:hover { opacity: .8; }
   border: 1px solid rgba(226,232,240,.95);
   box-shadow: var(--shadow-sm);
   margin-bottom: 1.5rem;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.filter-surface.is-loading {
+  opacity: .72;
 }
 .search-input, .select-input {
   padding: .55rem .9rem;

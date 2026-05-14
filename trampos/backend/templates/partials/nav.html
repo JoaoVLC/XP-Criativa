@@ -1,7 +1,7 @@
 <nav id="main-nav">
   <div class="nav-brand">
     <a href="{{ url_for('home') }}">
-      <img src="{{ url_for('static', path='img/logo.png') }}" alt="Trampos" class="nav-brand-logo" />
+      <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="nav-brand-logo" />
       <span class="nav-brand-text">trampos</span>
     </a>
   </div>

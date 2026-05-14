@@ -18,110 +18,117 @@
           <p class="page-subtitle">Encontre trabalhos informais, acompanhe candidaturas e gerencie perfis em uma experiencia server-side mais fluida.</p>
         {% endif %}
       </div>
-      <img src="{{ url_for('static', path='img/logo.png') }}" alt="Trampos" class="hero-logo" />
+      <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="hero-logo" />
     </div>
 
-    <form method="get" class="filter-bar filter-surface">
-      <input
-        type="text"
-        name="busca"
-        class="search-input"
-        placeholder="Buscar por titulo, local ou empresa"
-        value="{{ filtros.busca }}"
-      />
+    <div id="job-results-region" aria-live="polite">
+      <form
+        method="get"
+        class="filter-bar filter-surface"
+        data-enhanced-filter="true"
+        data-update-target="#job-results-region"
+      >
+        <input
+          type="text"
+          name="busca"
+          class="search-input"
+          placeholder="Buscar por titulo, local ou empresa"
+          value="{{ filtros.busca }}"
+        />
 
-      <select name="categoria" class="select-input">
-        <option value="">Todas as categorias</option>
-        {% for categoria in categorias %}
-          <option value="{{ categoria.id_categoria }}" {% if filtros.categoria == categoria.id_categoria ~ '' %}selected{% endif %}>
-            {{ categoria.nome }}
-          </option>
-        {% endfor %}
-      </select>
+        <select name="categoria" class="select-input" data-auto-submit="true" aria-label="Filtrar vagas por categoria">
+          <option value="">Todas as categorias</option>
+          {% for categoria in categorias %}
+            <option value="{{ categoria.id_categoria }}" {% if filtros.categoria == categoria.id_categoria ~ '' %}selected{% endif %}>
+              {{ categoria.nome }}
+            </option>
+          {% endfor %}
+        </select>
 
-      <button type="submit" class="btn btn-primary">Filtrar</button>
-      {% if filtros.busca or filtros.categoria %}
-        <a href="{{ url_for('home') }}" class="btn btn-ghost">Limpar</a>
-      {% endif %}
-    </form>
-
-    {% if user %}
-      <div class="info-banner">
-        Bem-vindo, <strong>{{ user.nome }}</strong>.
-        {% if user.tipo == 'empresa' %}
-          Voce pode publicar vagas e acompanhar candidatos.
-        {% else %}
-          Voce pode se candidatar e acompanhar o andamento pelo perfil.
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        {% if filtros.busca or filtros.categoria %}
+          <a href="{{ url_for('home') }}" class="btn btn-ghost">Limpar</a>
         {% endif %}
-      </div>
+      </form>
 
-      <div class="role-highlight role-highlight-{{ user.tipo }}">
-        <div>
-          <strong>
-            {% if user.tipo == 'empresa' %}
-              Sua area esta pronta para gerenciar contratacoes.
-            {% else %}
-              Sua area esta pronta para acompanhar oportunidades.
-            {% endif %}
-          </strong>
-          <p>
-            {% if user.tipo == 'empresa' %}
-              Veja candidatos nas suas vagas ou publique uma nova oportunidade.
-            {% else %}
-              Revise suas candidaturas ou atualize seu perfil com avatar e dados.
-            {% endif %}
-          </p>
-        </div>
-        <div class="role-highlight-actions">
+      {% if user %}
+        <div class="info-banner">
+          Bem-vindo, <strong>{{ user.nome }}</strong>.
           {% if user.tipo == 'empresa' %}
-            <a href="{{ url_for('create_job_page') }}" class="btn btn-primary btn-sm">Publicar vaga</a>
-            <a href="{{ url_for('profile_page') }}" class="btn btn-ghost btn-sm">Ver perfil</a>
+            Voce pode publicar vagas e acompanhar candidatos.
           {% else %}
-            <a href="{{ url_for('profile_page') }}" class="btn btn-primary btn-sm">Ver perfil</a>
-            <a href="{{ url_for('home') }}" class="btn btn-ghost btn-sm">Explorar vagas</a>
+            Voce pode se candidatar e acompanhar o andamento pelo perfil.
           {% endif %}
         </div>
-      </div>
-    {% endif %}
 
-    <div class="job-list">
-      {% for vaga in vagas %}
-        <div class="job-card">
-          <div class="job-card-body">
-            <div class="job-card-header">
-              {% if vaga.categoria_nome %}
-                <span class="badge badge-secondary">{{ vaga.categoria_nome }}</span>
+        <div class="role-highlight role-highlight-{{ user.tipo }}">
+          <div>
+            <strong>
+              {% if user.tipo == 'empresa' %}
+                Sua area esta pronta para gerenciar contratacoes.
+              {% else %}
+                Sua area esta pronta para acompanhar oportunidades.
               {% endif %}
-            </div>
-
-            <h2 class="job-card-title">
-              <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}">{{ vaga.titulo }}</a>
-            </h2>
-
-            <p class="job-card-desc">
-              {{ vaga.descricao[:110] }}{% if vaga.descricao|length > 110 %}...{% endif %}
+            </strong>
+            <p>
+              {% if user.tipo == 'empresa' %}
+                Veja candidatos nas suas vagas ou publique uma nova oportunidade.
+              {% else %}
+                Revise suas candidaturas ou atualize seu perfil com avatar e dados.
+              {% endif %}
             </p>
+          </div>
+          <div class="role-highlight-actions">
+            {% if user.tipo == 'empresa' %}
+              <a href="{{ url_for('create_job_page') }}" class="btn btn-primary btn-sm">Publicar vaga</a>
+              <a href="{{ url_for('profile_page') }}" class="btn btn-ghost btn-sm">Ver perfil</a>
+            {% else %}
+              <a href="{{ url_for('profile_page') }}" class="btn btn-primary btn-sm">Ver perfil</a>
+              <a href="{{ url_for('home') }}" class="btn btn-ghost btn-sm">Explorar vagas</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
 
-            <div class="job-card-meta">
-              <span>📍 {{ vaga.local }}</span>
-              <span>📅 {{ vaga.data|date_br }}</span>
-              <span>💰 {{ vaga.pagamento|money_br }}</span>
-              <span>🏢 {{ vaga.empresa_nome }}</span>
+      <div class="job-list">
+        {% for vaga in vagas %}
+          <div class="job-card">
+            <div class="job-card-body">
+              <div class="job-card-header">
+                {% if vaga.categoria_nome %}
+                  <span class="badge badge-secondary">{{ vaga.categoria_nome }}</span>
+                {% endif %}
+              </div>
+
+              <h2 class="job-card-title">
+                <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}">{{ vaga.titulo }}</a>
+              </h2>
+
+              <p class="job-card-desc">
+                {{ vaga.descricao[:110] }}{% if vaga.descricao|length > 110 %}...{% endif %}
+              </p>
+
+              <div class="job-card-meta">
+                <span>📍 {{ vaga.local }}</span>
+                <span>📅 {{ vaga.data|date_br }}</span>
+                <span>💰 {{ vaga.pagamento|money_br }}</span>
+                <span>🏢 {{ vaga.empresa_nome }}</span>
+              </div>
+            </div>
+
+            <div class="job-card-action">
+              <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="btn btn-primary btn-sm">
+                Ver detalhes
+              </a>
             </div>
           </div>
-
-          <div class="job-card-action">
-            <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="btn btn-primary btn-sm">
-              Ver detalhes
-            </a>
+        {% else %}
+          <div class="empty-state">
+            <span>🔍</span>
+            <p>Nenhuma vaga encontrada com os filtros informados.</p>
           </div>
-        </div>
-      {% else %}
-        <div class="empty-state">
-          <span>🔍</span>
-          <p>Nenhuma vaga encontrada com os filtros informados.</p>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
     </div>
   </div>
 {% endblock %}

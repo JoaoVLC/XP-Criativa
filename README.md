@@ -29,7 +29,6 @@ trampos/
 │   ├── requirements.txt
 │   ├── seed.py              # Recria e popula o banco a partir do SQL
 │   └── trampos.sql
-└── frontend/                # Protótipos originais mantidos no repositório
 ```
 
 ---

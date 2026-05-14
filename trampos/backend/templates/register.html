@@ -4,7 +4,7 @@
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-logo">
-        <img src="{{ url_for('static', path='img/logo.png') }}" alt="Trampos" class="auth-logo-image" />
+        <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="auth-logo-image" />
       </div>
       <h1 class="auth-title">Criar conta</h1>
 
