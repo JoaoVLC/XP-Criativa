@@ -16,10 +16,12 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.database import SESSION_SECRET, get_connection
 
+# Caminhos usados pelo FastAPI para encontrar os arquivos estaticos e os templates.
 BASE_DIR = Path(__file__).resolve().parents[1]
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
+# Constantes reutilizadas nas validacoes e na exibicao das candidaturas.
 EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
 STATUS_LABELS = {
     "pendente": "⏳ Pendente",
@@ -34,6 +36,7 @@ STATUS_CLASSES = {
 MAX_AVATAR_SIZE = 2 * 1024 * 1024
 ALLOWED_AVATAR_MIMES = {"image/png", "image/jpeg", "image/gif", "image/webp"}
 
+# Instancia principal da aplicacao e configuracao da sessao do usuario.
 app = FastAPI(title="Trampos", version="3.0.0")
 app.add_middleware(
     SessionMiddleware,
@@ -45,10 +48,12 @@ app.add_middleware(
 )
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+# Motor de templates usado para renderizar as paginas HTML.
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 def static_asset_url(request: Request, path: str) -> str:
+    # Adiciona a data de modificacao na URL para evitar cache antigo de CSS/imagens.
     normalized_path = path.lstrip("/")
     asset_path = STATIC_DIR / normalized_path
     asset_url = str(request.url_for("static", path=normalized_path))
@@ -59,6 +64,7 @@ def static_asset_url(request: Request, path: str) -> str:
     return asset_url
 
 
+# Filtros e helpers de formatacao usados diretamente nos templates Jinja.
 def format_date_br(value: Any) -> str:
     if not value:
         return ""
@@ -78,6 +84,7 @@ def format_money_br(value: Any) -> str:
     return f"R$ {formatted}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+# Helpers para exibir avatar salvo no banco ou uma inicial quando nao houver imagem.
 def avatar_initial(name: str | None) -> str:
     if not name:
         return "?"
@@ -85,6 +92,7 @@ def avatar_initial(name: str | None) -> str:
 
 
 def detect_image_mime(file_bytes: bytes) -> str | None:
+    # Confere a assinatura real do arquivo, nao apenas o content-type enviado pelo navegador.
     if file_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
         return "image/png"
     if file_bytes.startswith(b"\xff\xd8\xff"):
@@ -106,6 +114,7 @@ def avatar_data_url(avatar: bytes | None, avatar_mime: str | None) -> str | None
 
 
 def enrich_avatar(record: dict[str, Any] | None, *, avatar_key: str = "avatar", mime_key: str = "avatar_mime") -> dict[str, Any] | None:
+    # Cria uma copia do registro com o avatar pronto para ser usado no atributo src do HTML.
     if not record:
         return None
 
@@ -122,6 +131,7 @@ templates.env.globals["status_label"] = lambda status_value: STATUS_LABELS.get(s
 templates.env.globals["status_class"] = lambda status_value: STATUS_CLASSES.get(status_value, "secondary")
 
 
+# Helpers de sessao, mensagens e respostas.
 def current_user(request: Request) -> dict[str, Any] | None:
     return request.session.get("user")
 
@@ -131,6 +141,7 @@ def flash(request: Request, message: str, kind: str = "info") -> None:
 
 
 def apply_response_headers(response: HTMLResponse | RedirectResponse) -> HTMLResponse | RedirectResponse:
+    # Evita que paginas autenticadas fiquem reaparecendo pelo botao "voltar" apos logout.
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -138,6 +149,7 @@ def apply_response_headers(response: HTMLResponse | RedirectResponse) -> HTMLRes
 
 
 def sync_session_user(request: Request) -> dict[str, Any] | None:
+    # Recarrega o usuario do banco a cada request para manter a sessao atualizada.
     session_user = current_user(request)
     if not session_user:
         return None
@@ -153,6 +165,7 @@ def sync_session_user(request: Request) -> dict[str, Any] | None:
 
 
 def require_user(request: Request, role: str | None = None) -> tuple[dict[str, Any] | None, RedirectResponse | None]:
+    # Centraliza a protecao de rotas que exigem login e, opcionalmente, tipo de usuario.
     user = sync_session_user(request)
     if not user:
         if "flash" not in request.session:
@@ -178,6 +191,7 @@ def render_template(
     *,
     status_code: int = status.HTTP_200_OK,
 ) -> HTMLResponse:
+    # Monta o contexto padrao compartilhado por todas as paginas.
     user = sync_session_user(request)
     user_profile = get_user_profile(user["id_usuario"]) if user else None
     payload = {
@@ -200,6 +214,7 @@ def render_template(
     return apply_response_headers(response)
 
 
+# Helpers simples de normalizacao e validacao de formularios.
 def normalize_text(value: str) -> str:
     return value.strip()
 
@@ -208,6 +223,7 @@ def validate_email(email: str) -> bool:
     return bool(EMAIL_RE.match(email))
 
 
+# Funcoes pequenas para executar SQL e sempre fechar a conexao.
 def query_all(query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
     connection = get_connection()
     try:
@@ -228,11 +244,13 @@ def query_one(query: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None
         connection.close()
 
 
+# Consultas de leitura usadas pelas rotas.
 def get_categories() -> list[dict[str, Any]]:
     return query_all("SELECT id_categoria, nome FROM Categoria ORDER BY nome")
 
 
 def get_jobs(*, search: str = "", category_id: int | None = None, company_id: int | None = None) -> list[dict[str, Any]]:
+    # Monta filtros opcionais sem concatenar valores diretamente no SQL.
     sql = """
         SELECT
             V.id_vaga,
@@ -419,6 +437,7 @@ def get_user_applications(id_usuario: int) -> list[dict[str, Any]]:
 
 
 def build_profile_context(user: dict[str, Any], form_data: dict[str, Any] | None = None, errors: dict[str, str] | None = None) -> dict[str, Any]:
+    # O perfil mostra informacoes diferentes para empresa e freelancer.
     profile_user = get_user_profile(user["id_usuario"]) or dict(user)
     profile_form = form_data or {
         "nome": profile_user["nome"],
@@ -442,6 +461,7 @@ def build_profile_context(user: dict[str, Any], form_data: dict[str, Any] | None
     return context
 
 
+# Conversores usados para tratar valores recebidos dos formularios e da URL.
 def parse_category(value: str) -> int | None:
     if not value:
         return None
@@ -459,6 +479,7 @@ def parse_future_date(value: str) -> date | None:
     return parsed
 
 
+# Rotas publicas de listagem, login, cadastro e logout.
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, busca: str = "", categoria: str = ""):
     sync_session_user(request)
@@ -498,6 +519,7 @@ def login_page(request: Request):
 
 @app.post("/login")
 def login(request: Request, email: str = Form(...), senha: str = Form(...)):
+    # Valida o formulario antes de consultar o usuario e comparar a senha com bcrypt.
     clean_email = normalize_text(email).lower()
     errors: dict[str, str] = {}
 
@@ -571,6 +593,7 @@ def register(
     senha: str = Form(...),
     confirmar: str = Form(...),
 ):
+    # Guarda os dados normalizados para poder devolver o formulario preenchido em caso de erro.
     form_data = {
         "nome": normalize_text(nome),
         "email": normalize_text(email).lower(),
@@ -606,6 +629,7 @@ def register(
         )
 
     hashed_password = bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
+    # Operacoes de escrita usam commit/rollback para manter o banco consistente.
     connection = get_connection()
     try:
         with connection.cursor() as cursor:
@@ -643,6 +667,7 @@ def logout(request: Request):
     return response
 
 
+# Rotas de vagas: criacao, detalhe, candidatura e exclusao.
 @app.get("/vaga/nova", response_class=HTMLResponse)
 def create_job_page(request: Request):
     user, response = require_user(request, role="empresa")
@@ -685,6 +710,7 @@ def create_job(
 
     categories = get_categories()
     category_ids = {item["id_categoria"] for item in categories}
+    # O formulario e reusado na tela caso alguma validacao falhe.
     form_data = {
         "titulo": normalize_text(titulo),
         "local": normalize_text(local),
@@ -773,6 +799,7 @@ def job_detail(request: Request, id_vaga: int):
 
     is_owner = bool(user and user["tipo"] == "empresa" and user["id_usuario"] == job["id_empresa"])
     is_freelancer = bool(user and user["tipo"] == "freelancer")
+    # A empresa dona da vaga ve todos os candidatos; freelancer ve apenas seu proprio status.
     applications = get_applications_for_job(id_vaga) if is_owner else []
     stats = get_application_stats(id_vaga, user["id_usuario"] if is_freelancer else None)
 
@@ -803,6 +830,7 @@ def apply_to_job(request: Request, id_vaga: int):
         flash(request, "Vaga nao encontrada.", "error")
         return redirect_to("/")
 
+    # Impede candidatura duplicada do mesmo freelancer na mesma vaga.
     existing_application = query_one(
         """
         SELECT id_candidatura
@@ -896,6 +924,7 @@ def delete_job(request: Request, id_vaga: int):
     return redirect_to("/perfil")
 
 
+# Rotas de candidaturas: empresa altera o status dos candidatos de suas vagas.
 @app.post("/candidaturas/{id_candidatura}/status")
 def update_application_status(request: Request, id_candidatura: int, status_candidatura: str = Form(..., alias="status")):
     user, response = require_user(request, role="empresa")
@@ -906,6 +935,7 @@ def update_application_status(request: Request, id_candidatura: int, status_cand
         flash(request, "Status de candidatura invalido.", "error")
         return redirect_to("/perfil")
 
+    # Confirma se a candidatura pertence a uma vaga criada pela empresa logada.
     application = query_one(
         """
         SELECT C.id_candidatura, C.id_vaga, V.id_empresa
@@ -940,6 +970,7 @@ def update_application_status(request: Request, id_candidatura: int, status_cand
     return redirect_to(f"/vaga/{application['id_vaga']}")
 
 
+# Rotas de perfil: visualizacao, edicao, avatar e exclusao de conta.
 @app.get("/perfil", response_class=HTMLResponse)
 def profile_page(request: Request):
     user, response = require_user(request)
@@ -980,6 +1011,7 @@ def update_profile(
     if senha and len(senha) < 6:
         errors["senha"] = "A senha deve ter no minimo 6 caracteres."
 
+    # O email pode ser alterado, mas nao pode colidir com outra conta existente.
     existing_user = query_one(
         """
         SELECT id_usuario
@@ -1006,6 +1038,7 @@ def update_profile(
     try:
         with connection.cursor() as cursor:
             if senha:
+                # A senha so e atualizada quando o usuario preenche o campo.
                 hashed_password = bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
                 cursor.execute(
                     """
@@ -1049,6 +1082,7 @@ async def upload_profile_avatar(request: Request, avatar: UploadFile = File(...)
     avatar_bytes = await avatar.read()
     avatar_mime = detect_image_mime(avatar_bytes)
 
+    # O avatar fica salvo no banco como bytes, limitado por tamanho e tipo de imagem.
     if not avatar_bytes:
         flash(request, "Selecione uma imagem para enviar.", "error")
         return redirect_to("/perfil")
