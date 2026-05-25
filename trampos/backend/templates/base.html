@@ -11,10 +11,12 @@
   <link rel="stylesheet" href="{{ static_asset_url(request, 'css/styles.css') }}" />
 </head>
 <body class="{{ body_class | default('') }}">
+  {# Navbar compartilhada; paginas de autenticacao podem optar por esconder. #}
   {% if show_nav %}
     {% include "partials/nav.html" %}
   {% endif %}
 
+  {# Mensagens curtas de feedback renderizadas pela rota atual. #}
   {% include "partials/flash.html" %}
 
   {% block content %}{% endblock %}

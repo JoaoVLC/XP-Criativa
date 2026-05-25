@@ -11,6 +11,7 @@
       <p class="card-intro">
         Informe titulo, local, data e pagamento para deixar a oportunidade mais clara e atrativa para os candidatos.
       </p>
+      {# Formulario de publicacao reutiliza form_data e errors definidos pela rota. #}
       <form method="post" action="{{ url_for('create_job') }}" novalidate>
         <div class="form-row">
           <div class="form-group">

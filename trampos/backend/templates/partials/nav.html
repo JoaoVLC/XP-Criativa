@@ -1,4 +1,5 @@
 <nav id="main-nav">
+  {# Identidade visual fixa no topo da aplicacao. #}
   <div class="nav-brand">
     <a href="{{ url_for('home') }}">
       <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="nav-brand-logo" />
@@ -11,6 +12,7 @@
   </button>
 
   <div class="nav-menu" id="nav-menu">
+    {# Links principais variam conforme usuario anonimo, freelancer ou empresa. #}
     <a href="{{ url_for('home') }}" class="{{ 'active' if active_page == 'vagas' else '' }}">
       Vagas
     </a>
@@ -22,6 +24,7 @@
     {% endif %}
 
     {% if user %}
+      {# Avatar usa imagem enviada pelo usuario; sem imagem, mostra a inicial. #}
       <a href="{{ url_for('profile_page') }}" class="nav-user {{ 'active' if active_page == 'perfil' else '' }}">
         {% if user_avatar_data %}
           <img src="{{ user_avatar_data }}" alt="Avatar de {{ user.nome }}" class="nav-avatar-image" />

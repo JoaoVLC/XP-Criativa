@@ -8,6 +8,7 @@
       </div>
       <h1 class="auth-title">Entrar na conta</h1>
 
+      {# Mantem valores e erros vindos da rota apos uma tentativa invalida. #}
       <form method="post" action="{{ url_for('login') }}" novalidate>
         <div class="form-group">
           <label for="email">Email</label>

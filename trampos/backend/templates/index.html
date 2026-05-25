@@ -21,6 +21,7 @@
       <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="hero-logo" />
     </div>
 
+    {# Regiao atualizada pelos filtros sem recarregar a pagina quando o fetch funciona. #}
     <div id="job-results-region" aria-live="polite">
       <form
         method="get"
@@ -91,6 +92,7 @@
       {% endif %}
 
       <div class="job-list">
+        {# Cards de vagas: resumo da oportunidade e link para a pagina de detalhes. #}
         {% for vaga in vagas %}
           <div class="job-card">
             <div class="job-card-body">

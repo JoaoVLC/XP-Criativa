@@ -2,6 +2,7 @@
 
 {% block content %}
   <div class="container">
+    {# Resumo publico da vaga com dados principais antes das acoes. #}
     <div class="card mb-4">
       <a href="{{ url_for('home') }}" class="back-link">← Voltar para as vagas</a>
 
@@ -57,6 +58,7 @@
     {% endif %}
 
     {% if is_owner %}
+      {# Area da empresa dona da vaga para acompanhar e decidir candidaturas. #}
       <div class="card mb-4">
         <div class="form-actions" style="justify-content: space-between;">
           <h3>Candidatos</h3>

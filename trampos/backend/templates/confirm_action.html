@@ -2,6 +2,7 @@
 
 {% block content %}
   <div class="container">
+    {# Tela reutilizavel para confirmacoes sensiveis antes do POST final. #}
     <div class="card card-accent confirm-card">
       <span class="badge badge-{{ 'danger' if danger else 'primary' }} mb-2">Confirmacao</span>
       <h1>{{ card_title }}</h1>

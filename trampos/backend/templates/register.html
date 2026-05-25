@@ -8,6 +8,7 @@
       </div>
       <h1 class="auth-title">Criar conta</h1>
 
+      {# Mantem valores e erros vindos da rota apos uma tentativa invalida. #}
       <form method="post" action="{{ url_for('register') }}" novalidate>
         <div class="form-group">
           <label for="nome">Nome completo <span class="required">*</span></label>
@@ -37,6 +38,7 @@
 
         <div class="form-group">
           <label>Tipo de conta <span class="required">*</span></label>
+          {# Seletor visual para o mesmo campo tipo processado no backend. #}
           <div class="tipo-selector">
             <label class="tipo-option">
               <input type="radio" name="tipo" value="freelancer" {% if form_data.tipo == 'freelancer' %}checked{% endif %} />

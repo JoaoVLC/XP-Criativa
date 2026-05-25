@@ -6,6 +6,7 @@
       <div>
         <div class="card mb-4">
           <div class="profile-header profile-card-top">
+            {# Avatar do perfil usa imagem enviada; fallback mostra a inicial do nome. #}
             {% if profile_user.avatar_data %}
               <img src="{{ profile_user.avatar_data }}" alt="Avatar de {{ profile_user.nome }}" class="profile-avatar-image" />
             {% else %}
@@ -19,6 +20,7 @@
             </div>
           </div>
 
+          {# Upload de avatar separado dos dados cadastrais para simplificar validacao. #}
           <form method="post" action="{{ url_for('upload_profile_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
             <label for="avatar">Foto do perfil</label>
             <div class="avatar-upload-row">
@@ -69,6 +71,7 @@
         <div class="card">
           <p class="section-title">{{ 'Minhas vagas' if user.tipo == 'empresa' else 'Minhas candidaturas' }}</p>
 
+          {# Lista lateral alterna entre vagas da empresa e candidaturas do freelancer. #}
           {% if user.tipo == 'empresa' %}
             {% for vaga in jobs %}
               <div class="activity-item">
