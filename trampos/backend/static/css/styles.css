@@ -1,8 +1,7 @@
-/* ═══════════════════════════════════════════════════════════
-   TRAMPOS  –  Design System
-   ═══════════════════════════════════════════════════════════ */
+/* Trampos design system
+   Shared tokens, layout primitives, components, and responsive rules. */
 
-/* ── Variables ──────────────────────────────────────────── */
+/* Variables: color, spacing, radius, shadow, and font tokens. */
 :root {
   --primary:       #1f2a3d;
   --primary-dark:  #121a27;
@@ -35,7 +34,7 @@
   --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
-/* ── Reset ──────────────────────────────────────────────── */
+/* Reset and page defaults. */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
@@ -50,7 +49,7 @@ body {
 a { color: var(--primary); text-decoration: none; transition: opacity .15s; }
 a:hover { opacity: .8; }
 
-/* ── Nav ────────────────────────────────────────────────── */
+/* Navigation bar and user avatar in the header. */
 #main-nav {
   background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 68%, #2d3c56 100%);
   padding: 0 1.5rem;
@@ -152,7 +151,7 @@ a:hover { opacity: .8; }
   cursor: pointer; padding: .2rem;
 }
 
-/* ── Layout ─────────────────────────────────────────────── */
+/* Page layout helpers and shared spacing. */
 .container { max-width: 1020px; margin: 0 auto; padding: 2rem 1rem; }
 .page-header {
   margin-bottom: 1.75rem;
@@ -169,7 +168,7 @@ a:hover { opacity: .8; }
 .divider { border: none; border-top: 1px solid var(--gray-200); margin: 1.25rem 0; }
 .helper-text { display: block; margin-top: .3rem; color: var(--gray-400); font-size: .8rem; }
 
-/* ── Cards ──────────────────────────────────────────────── */
+/* Generic cards and accented card variant. */
 .card {
   background: var(--white);
   border-radius: var(--radius);
@@ -194,7 +193,7 @@ a:hover { opacity: .8; }
   margin-bottom: 1.2rem;
 }
 
-/* ── Job list ───────────────────────────────────────────── */
+/* Job cards and list layout. */
 .job-list { display: grid; gap: 1rem; }
 .job-card {
   background: var(--white);
@@ -222,7 +221,7 @@ a:hover { opacity: .8; }
 .job-card-meta { display: flex; gap: .75rem; flex-wrap: wrap; font-size: .82rem; color: var(--gray-600); }
 .job-card-action { flex-shrink: 0; align-self: center; }
 
-/* ── Filter bar ─────────────────────────────────────────── */
+/* Search and category filter bar. */
 .filter-bar {
   display: flex;
   gap: .75rem;
@@ -258,7 +257,7 @@ a:hover { opacity: .8; }
   box-shadow: 0 0 0 3px rgba(26,86,219,.1);
 }
 
-/* ── Buttons ────────────────────────────────────────────── */
+/* Buttons and button variants. */
 .btn {
   display: inline-flex; align-items: center; gap: .3rem;
   padding: .55rem 1.25rem;
@@ -284,7 +283,7 @@ a:hover { opacity: .8; }
 .btn-block  { width: 100%; justify-content: center; }
 .btn-sm     { padding: .32rem .8rem; font-size: .8rem; }
 
-/* ── Forms ──────────────────────────────────────────────── */
+/* Form fields, validation states, and password toggle. */
 .form-group { margin-bottom: 1.1rem; }
 .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-top: .5rem; }
@@ -338,7 +337,7 @@ textarea { resize: vertical; min-height: 100px; }
   color: var(--gray-400); padding: .2rem; line-height: 1;
 }
 
-/* ── Badges ─────────────────────────────────────────────── */
+/* Badges for status, role, and category labels. */
 .badge {
   display: inline-block;
   padding: .2rem .65rem;
@@ -352,7 +351,7 @@ textarea { resize: vertical; min-height: 100px; }
 .badge-warning   { background: var(--warning-light); color: var(--warning-color); }
 .badge-secondary { background: var(--gray-100);      color: var(--gray-700); }
 
-/* ── Detail page ────────────────────────────────────────── */
+/* Job detail page blocks. */
 .back-link { font-size: .85rem; color: var(--primary); display: inline-block; margin-bottom: .25rem; }
 .detail-tags { display: flex; gap: .6rem; flex-wrap: wrap; margin: .9rem 0 1.1rem; }
 .tag {
@@ -408,7 +407,7 @@ textarea { resize: vertical; min-height: 100px; }
   flex-wrap: wrap;
 }
 
-/* ── Applicants ─────────────────────────────────────────── */
+/* Candidate list shown to the job owner. */
 .candidatos-list { display: grid; gap: .75rem; margin-top: 1rem; }
 .candidato-item {
   display: flex; align-items: center; gap: .85rem;
@@ -435,7 +434,7 @@ textarea { resize: vertical; min-height: 100px; }
   border: 2px solid rgba(255,184,46,.35);
 }
 
-/* ── Profile ────────────────────────────────────────────── */
+/* Profile page, avatar upload, and activity list. */
 .profile-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.5rem; align-items: start; }
 .profile-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .profile-card-top { margin-bottom: 1.1rem; }
@@ -498,7 +497,7 @@ textarea { resize: vertical; min-height: 100px; }
 .activity-title:hover { color: var(--primary); opacity: 1; }
 .activity-meta { font-size: .78rem; color: var(--gray-400); margin-top: .15rem; }
 
-/* ── Auth pages ─────────────────────────────────────────── */
+/* Login and registration pages. */
 .auth-page {
   background:
     radial-gradient(circle at top left, rgba(255,184,46,.18), transparent 26%),
@@ -525,7 +524,7 @@ textarea { resize: vertical; min-height: 100px; }
 .auth-title { font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 1.5rem; color: var(--gray-800); }
 .auth-footer { text-align: center; font-size: .88rem; color: var(--gray-600); margin-top: 1.25rem; }
 
-/* Tipo selector */
+/* Account type selector on registration. */
 .tipo-selector { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .tipo-option input[type="radio"] { display: none; }
 .tipo-card {
@@ -545,7 +544,7 @@ textarea { resize: vertical; min-height: 100px; }
   background: var(--primary-light);
 }
 
-/* ── Flash messages ─────────────────────────────────────── */
+/* Flash messages. */
 .flash-banner {
   margin-top: 1.25rem;
   padding: .9rem 1rem;
@@ -558,7 +557,7 @@ textarea { resize: vertical; min-height: 100px; }
 .flash-error   { background: var(--danger-light); color: var(--danger); border: 1px solid #f5b8b8; }
 .flash-info    { background: var(--primary-light); color: var(--primary-dark); border: 1px solid #bfdbfe; }
 
-/* ── Confirmation ───────────────────────────────────────── */
+/* Confirmation screens. */
 .confirm-card { max-width: 640px; }
 .confirm-card h1 { font-size: 1.5rem; margin-bottom: .4rem; }
 .confirm-copy { color: var(--gray-600); margin: 1rem 0 1.25rem; line-height: 1.7; }
@@ -568,6 +567,8 @@ textarea { resize: vertical; min-height: 100px; }
 .empty-action {
   margin-top: .75rem;
 }
+
+/* Home hero and logo treatment. */
 .home-hero {
   display: flex;
   align-items: center;
@@ -581,7 +582,7 @@ textarea { resize: vertical; min-height: 100px; }
   filter: drop-shadow(0 18px 34px rgba(31,42,61,.12));
 }
 
-/* ── Modal ──────────────────────────────────────────────── */
+/* Modal dialog. */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.45);
@@ -600,7 +601,7 @@ textarea { resize: vertical; min-height: 100px; }
 .modal-box p  { color: var(--gray-600); font-size: .9rem; margin-bottom: 1.25rem; }
 .modal-btns   { display: flex; gap: .75rem; justify-content: flex-end; }
 
-/* ── Skeletons ──────────────────────────────────────────── */
+/* Loading skeletons. */
 .skeleton-list { display: grid; gap: 1rem; }
 .skeleton {
   background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
@@ -611,7 +612,7 @@ textarea { resize: vertical; min-height: 100px; }
 .card-skeleton { height: 100px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-/* ── Empty states ───────────────────────────────────────── */
+/* Empty states. */
 .empty-state {
   text-align: center; padding: 3.5rem 1rem;
   color: var(--gray-400);
@@ -619,7 +620,7 @@ textarea { resize: vertical; min-height: 100px; }
 .empty-state span { font-size: 2.5rem; display: block; margin-bottom: .75rem; }
 .empty-small { text-align: center; padding: 1.5rem; color: var(--gray-400); font-size: .9rem; }
 
-/* ── Responsive ─────────────────────────────────────────── */
+/* Responsive adjustments for small screens. */
 @media (max-width: 640px) {
   .nav-toggle { display: block; }
   .nav-menu {
