@@ -1,120 +1,133 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container">
-    <div class="profile-grid">
-      <div>
-        <div class="card mb-4">
-          <div class="profile-header profile-card-top">
-            {# Avatar do perfil usa imagem enviada; fallback mostra a inicial do nome. #}
-            {% if profile_user.avatar_data %}
-              <img src="{{ profile_user.avatar_data }}" alt="Avatar de {{ profile_user.nome }}" class="profile-avatar-image" />
-            {% else %}
-              <div class="profile-avatar">{{ avatar_initial(user.nome) }}</div>
-            {% endif %}
-            <div>
-              <h2 style="font-size: 1.15rem; font-weight: 700;">{{ profile_user.nome }}</h2>
-              <span class="badge badge-{{ 'primary' if user.tipo == 'empresa' else 'success' }}">
-                {{ '🏢 Empresa' if user.tipo == 'empresa' else '👷 Freelancer' }}
-              </span>
+  <main class="container">
+    <section class="profile-grid">
+      <div class="card">
+        <div class="profile-header profile-card-top">
+          {% if profile_user.avatar_data %}
+            <img src="{{ profile_user.avatar_data }}" alt="Avatar de {{ profile_user.nome }}" class="profile-avatar-image" />
+          {% else %}
+            <div class="profile-avatar">{{ avatar_initial(user.nome) }}</div>
+          {% endif %}
+          <div>
+            <h1 class="compact-title">{{ profile_user.nome }}</h1>
+            <span class="badge badge-{{ 'primary' if user.tipo == 'empresa' else 'success' if user.tipo == 'freelancer' else 'warning' }}">{{ 'Empresa' if user.tipo == 'empresa' else 'Freelancer' if user.tipo == 'freelancer' else 'Admin' }}</span>
+            <div class="profile-actions-inline">
+              <a href="{{ url_for('self_profile_page') }}" class="btn btn-primary btn-sm">Ver perfil</a>
             </div>
           </div>
+        </div>
 
-          {# Upload de avatar separado dos dados cadastrais para simplificar validacao. #}
-          <form method="post" action="{{ url_for('upload_profile_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
-            <label for="avatar">Foto do perfil</label>
+        <form method="post" action="{{ url_for('upload_profile_avatar') }}" enctype="multipart/form-data" class="avatar-upload-form">
+          <label for="avatar">Foto do perfil</label>
+          <div class="avatar-upload-row">
+            <input type="file" id="avatar" name="avatar" accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" />
+            <button type="submit" class="btn btn-ghost btn-sm">Enviar avatar</button>
+          </div>
+          <span class="helper-text">PNG, JPG, GIF ou WEBP até 2 MB.</span>
+        </form>
+
+        {% if user.tipo == 'freelancer' %}
+          <form method="post" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" class="avatar-upload-form mt-3">
+            <label for="curriculo">Currículo em PDF <span class="required">*</span></label>
             <div class="avatar-upload-row">
-              <input type="file" id="avatar" name="avatar" accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp" />
-              <button type="submit" class="btn btn-ghost btn-sm">Enviar avatar</button>
+              <input type="file" id="curriculo" name="curriculo" accept="application/pdf,.pdf" />
+              <button type="submit" class="btn btn-ghost btn-sm">Enviar currículo</button>
             </div>
-            <span class="helper-text">Formatos aceitos: PNG, JPG, GIF ou WEBP com ate 2 MB.</span>
+            {% if profile_user.curriculo_nome %}
+              <span class="helper-text">Atual: <a href="{{ url_for('download_resume', id_usuario=user.id_usuario) }}">{{ profile_user.curriculo_nome }}</a></span>
+            {% else %}
+              <span class="helper-text">Obrigatório para candidaturas.</span>
+            {% endif %}
           </form>
+        {% endif %}
 
-          <hr class="divider" />
-
-          <p class="section-title">Editar perfil</p>
-
-          <form method="post" action="{{ url_for('update_profile') }}" novalidate>
+        <hr class="divider" />
+        <p class="section-title">Configurações do perfil</p>
+        <form method="post" action="{{ url_for('update_profile') }}" novalidate>
+          {% if user.tipo == 'empresa' %}
             <div class="form-group">
-              <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" value="{{ form_data.nome }}" class="{{ 'input-error' if errors.get('nome') else '' }}" />
+              <label for="razao_social">Razão social <span class="required">*</span></label>
+              <input type="text" id="razao_social" name="razao_social" value="{{ form_data.razao_social }}" placeholder="Razão social da empresa" class="{{ 'input-error' if errors.get('razao_social') else '' }}" />
+              <span class="field-error">{{ errors.get('razao_social', '') }}</span>
+            </div>
+            <div class="form-group">
+              <label for="cnpj">CNPJ <span class="required">*</span></label>
+              <input type="text" id="cnpj" name="cnpj" value="{{ form_data.cnpj }}" placeholder="Apenas números" class="{{ 'input-error' if errors.get('cnpj') else '' }}" />
+              <span class="field-error">{{ errors.get('cnpj', '') }}</span>
+            </div>
+            <input type="hidden" name="nome" value="{{ profile_user.nome }}" />
+          {% else %}
+            <div class="form-group">
+              <label for="nome">Nome <span class="required">*</span></label>
+              <input type="text" id="nome" name="nome" value="{{ form_data.nome }}" placeholder="Nome completo" class="{{ 'input-error' if errors.get('nome') else '' }}" />
               <span class="field-error">{{ errors.get('nome', '') }}</span>
             </div>
-
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input type="email" id="email" name="email" value="{{ form_data.email }}" class="{{ 'input-error' if errors.get('email') else '' }}" />
-              <span class="field-error">{{ errors.get('email', '') }}</span>
-            </div>
-
-            <div class="form-group">
-              <label for="senha">Nova senha <small>(deixe em branco para manter)</small></label>
-              <div class="input-group">
-                <input type="password" id="senha" name="senha" class="{{ 'input-error' if errors.get('senha') else '' }}" />
-                <button type="button" class="input-toggle" onclick="toggleSenha('senha')">👁</button>
+            {% if user.tipo == 'freelancer' %}
+              <div class="form-group">
+                <label for="cpf">CPF <span class="required">*</span></label>
+                <input type="text" id="cpf" name="cpf" value="{{ form_data.cpf }}" placeholder="Apenas números" class="{{ 'input-error' if errors.get('cpf') else '' }}" />
+                <span class="field-error">{{ errors.get('cpf', '') }}</span>
               </div>
-              <span class="field-error">{{ errors.get('senha', '') }}</span>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-          </form>
-
-          <hr class="divider" />
-
-          <a href="{{ url_for('delete_profile_page') }}" class="btn btn-outline">Excluir conta</a>
-        </div>
-      </div>
-
-      <div>
-        <div class="card">
-          <p class="section-title">{{ 'Minhas vagas' if user.tipo == 'empresa' else 'Minhas candidaturas' }}</p>
-
-          {# Lista lateral alterna entre vagas da empresa e candidaturas do freelancer. #}
-          {% if user.tipo == 'empresa' %}
-            {% for vaga in jobs %}
-              <div class="activity-item">
-                <div class="activity-info">
-                  <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="activity-title">{{ vaga.titulo }}</a>
-                  <div class="activity-meta">
-                    📍 {{ vaga.local }} · 📅 {{ vaga.data|date_br }} · 💰 {{ vaga.pagamento|money_br }}
-                    {% if vaga.categoria_nome %} · {{ vaga.categoria_nome }}{% endif %}
-                  </div>
-                </div>
-
-                <span class="badge badge-secondary">{{ vaga.total_candidaturas }} candidato(s)</span>
-              </div>
-            {% else %}
-              <p class="empty-small">
-                Nenhuma vaga publicada ainda.<br />
-                <a href="{{ url_for('create_job_page') }}" class="btn btn-primary btn-sm empty-action">Publicar vaga</a>
-              </p>
-            {% endfor %}
-          {% else %}
-            {% for candidatura in applications %}
-              <div class="activity-item">
-                <div class="activity-info">
-                  <a href="{{ url_for('job_detail', id_vaga=candidatura.id_vaga) }}" class="activity-title">{{ candidatura.titulo }}</a>
-                  <div class="activity-meta">
-                    📍 {{ candidatura.local }} · 📅 {{ candidatura.data|date_br }} · 🏢 {{ candidatura.empresa_nome }}
-                    {% if candidatura.categoria_nome %} · {{ candidatura.categoria_nome }}{% endif %}
-                  </div>
-                </div>
-
-                <span class="badge badge-{{ status_class(candidatura.status) }}">
-                  {{ status_label(candidatura.status) }}
-                </span>
-              </div>
-            {% else %}
-              <p class="empty-small">
-                Nenhuma candidatura ainda.<br />
-                <a href="{{ url_for('home') }}" class="btn btn-primary btn-sm empty-action">Ver vagas</a>
-              </p>
-            {% endfor %}
+            {% endif %}
+            <input type="hidden" name="razao_social" value="{{ form_data.razao_social }}" />
+            <input type="hidden" name="cnpj" value="{{ form_data.cnpj }}" />
           {% endif %}
-        </div>
+          <div class="form-group">
+            <label for="email">Email <span class="required">*</span></label>
+            <input type="email" id="email" name="email" value="{{ form_data.email }}" placeholder="email@dominio.com" class="{{ 'input-error' if errors.get('email') else '' }}" />
+            <span class="field-error">{{ errors.get('email', '') }}</span>
+          </div>
+          <div class="form-group">
+            <label for="senha">Nova senha <small>(opcional)</small></label>
+            <div class="input-group">
+              <input type="password" id="senha" name="senha" placeholder="8 caracteres, número e especial" class="{{ 'input-error' if errors.get('senha') else '' }}" />
+              <button type="button" class="input-toggle" onclick="toggleSenha('senha')">Ver</button>
+            </div>
+            <span class="field-error">{{ errors.get('senha', '') }}</span>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar perfil</button>
+            <a href="{{ url_for('delete_profile_page') }}" class="btn btn-outline">Excluir conta</a>
+          </div>
+        </form>
       </div>
-    </div>
-  </div>
+
+      <div class="card">
+        <p class="section-title">{{ 'Minhas vagas' if user.tipo == 'empresa' else 'Minhas candidaturas' if user.tipo == 'freelancer' else 'Conta administrativa' }}</p>
+        {% if user.tipo == 'empresa' %}
+          {% for vaga in jobs %}
+            <div class="activity-item">
+              <div class="activity-info">
+                <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="activity-title">{{ vaga.titulo }}</a>
+                <div class="activity-meta">📍 {{ vaga.local }} · 📅 {{ vaga.data|date_br }} · 💰 {{ vaga.pagamento|money_br }} · {{ job_status_label(vaga.status) }}</div>
+              </div>
+              <span class="badge badge-secondary">{{ vaga.total_candidaturas }} candidato(s)</span>
+            </div>
+          {% else %}
+            <p class="empty-small">Nenhuma vaga publicada. <a href="{{ url_for('create_job_page') }}">Publicar vaga</a></p>
+          {% endfor %}
+        {% elif user.tipo == 'freelancer' %}
+          {% for candidatura in applications %}
+            <div class="activity-item">
+              <div class="activity-info">
+                <a href="{{ url_for('job_detail', id_vaga=candidatura.id_vaga) }}" class="activity-title">{{ candidatura.titulo }}</a>
+                <div class="activity-meta">📍 {{ candidatura.local }} · 🏢 {{ candidatura.empresa_nome }} · {{ candidatura.criada_em|datetime_br }}</div>
+              </div>
+              <span class="badge badge-{{ status_class(candidatura.status) }}">{{ status_label(candidatura.status) }}</span>
+              <form method="post" action="{{ url_for('delete_application', id_candidatura=candidatura.id_candidatura) }}">
+                <button type="submit" class="btn btn-ghost btn-sm">Cancelar</button>
+              </form>
+            </div>
+          {% else %}
+            <p class="empty-small">Nenhuma candidatura ainda. <a href="{{ url_for('home') }}">Ver vagas</a></p>
+          {% endfor %}
+        {% else %}
+          <p class="empty-small">Use o painel administrativo para gerenciar o sistema.</p>
+          <a href="{{ url_for('admin_page') }}" class="btn btn-primary">Abrir painel</a>
+        {% endif %}
+      </div>
+    </section>
+  </main>
 {% endblock %}

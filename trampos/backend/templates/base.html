@@ -11,96 +11,116 @@
   <link rel="stylesheet" href="{{ static_asset_url(request, 'css/styles.css') }}" />
 </head>
 <body class="{{ body_class | default('') }}">
-  {# Navbar compartilhada; paginas de autenticacao podem optar por esconder. #}
   {% if show_nav %}
     {% include "partials/nav.html" %}
   {% endif %}
-
-  {# Mensagens curtas de feedback renderizadas pela rota atual. #}
   {% include "partials/flash.html" %}
-
+  {% if not show_nav %}
+    <button class="theme-toggle auth-theme-toggle" type="button" onclick="toggleTheme()" title="Alternar tema">
+      <span id="theme-icon" aria-hidden="true">🌙</span>
+      <span id="theme-label" class="sr-only">Ativar tema escuro</span>
+    </button>
+  {% endif %}
   {% block content %}{% endblock %}
 
   <script>
+    const THEME_KEY = "trampos-theme";
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      localStorage.setItem(THEME_KEY, theme);
+      const icon = document.getElementById("theme-icon");
+      const label = document.getElementById("theme-label");
+      if (icon) icon.textContent = theme === "dark" ? "☀️" : "🌙";
+      if (label) label.textContent = theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro";
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.dataset.theme || "light";
+      applyTheme(current === "dark" ? "light" : "dark");
+    }
+
     function toggleNav() {
       const menu = document.getElementById("nav-menu");
-      if (menu) {
-        menu.classList.toggle("open");
-      }
+      if (menu) menu.classList.toggle("open");
     }
 
     function toggleSenha(id) {
       const field = document.getElementById(id);
-      if (field) {
-        field.type = field.type === "password" ? "text" : "password";
-      }
+      if (field) field.type = field.type === "password" ? "text" : "password";
+    }
+
+    function setRegistrationMode(mode) {
+      document.body.dataset.accountMode = mode;
+      document.querySelectorAll("[data-account-field]").forEach((block) => {
+        block.hidden = block.dataset.accountField !== mode;
+      });
+      const resume = document.getElementById("curriculo");
+      if (resume) resume.required = mode === "freelancer";
+    }
+
+    function validatePasswordHints(input) {
+      const value = input.value;
+      const rules = {
+        size: value.length >= 8,
+        number: /\d/.test(value),
+        special: /[^A-Za-z0-9]/.test(value),
+      };
+      Object.entries(rules).forEach(([key, valid]) => {
+        const item = document.querySelector(`[data-password-rule="${key}"]`);
+        if (item) item.classList.toggle("is-ok", valid);
+      });
     }
 
     async function submitEnhancedForm(form) {
       const targetSelector = form.dataset.updateTarget;
       const currentRegion = targetSelector ? document.querySelector(targetSelector) : null;
-
       if (!targetSelector || !currentRegion) {
         form.submit();
         return;
       }
-
-      if (form.dataset.loading === "true") {
-        return;
-      }
-
       const nextUrl = new URL(form.action || window.location.href, window.location.origin);
-      const params = new URLSearchParams(new FormData(form));
-      nextUrl.search = params.toString();
-
-      form.dataset.loading = "true";
+      nextUrl.search = new URLSearchParams(new FormData(form)).toString();
       form.classList.add("is-loading");
       currentRegion.setAttribute("aria-busy", "true");
-
       try {
-        const response = await fetch(nextUrl, {
-          headers: { "X-Requested-With": "fetch" },
-          credentials: "same-origin",
-        });
-
-        if (!response.ok) {
-          throw new Error("Nao foi possivel atualizar as vagas.");
-        }
-
+        const response = await fetch(nextUrl, { headers: { "X-Requested-With": "fetch" }, credentials: "same-origin" });
+        if (!response.ok) throw new Error("Falha ao atualizar filtros.");
         const html = await response.text();
         const nextDocument = new DOMParser().parseFromString(html, "text/html");
         const nextRegion = nextDocument.querySelector(targetSelector);
-
-        if (!nextRegion) {
-          throw new Error("Regiao de vagas nao encontrada.");
-        }
-
+        if (!nextRegion) throw new Error("Região não encontrada.");
         currentRegion.replaceWith(nextRegion);
         window.history.replaceState({}, "", nextUrl);
       } catch (error) {
         window.location.assign(nextUrl);
       } finally {
-        form.dataset.loading = "false";
         form.classList.remove("is-loading");
         currentRegion.removeAttribute("aria-busy");
       }
     }
 
-    document.addEventListener("change", (event) => {
-      const field = event.target.closest("[data-auto-submit='true']");
-      if (!field || !field.form) {
-        return;
-      }
+    document.addEventListener("DOMContentLoaded", () => {
+      applyTheme(localStorage.getItem(THEME_KEY) || "light");
+      const checkedType = document.querySelector("input[name='tipo']:checked");
+      if (checkedType) setRegistrationMode(checkedType.value);
+      const password = document.getElementById("senha");
+      if (password) validatePasswordHints(password);
+    });
 
-      field.form.requestSubmit();
+    document.addEventListener("input", (event) => {
+      if (event.target.id === "senha") validatePasswordHints(event.target);
+    });
+
+    document.addEventListener("change", (event) => {
+      if (event.target.name === "tipo") setRegistrationMode(event.target.value);
+      const field = event.target.closest("[data-auto-submit='true']");
+      if (field && field.form) field.form.requestSubmit();
     });
 
     document.addEventListener("submit", (event) => {
       const form = event.target;
-      if (!(form instanceof HTMLFormElement) || form.dataset.enhancedFilter !== "true") {
-        return;
-      }
-
+      if (!(form instanceof HTMLFormElement) || form.dataset.enhancedFilter !== "true") return;
       event.preventDefault();
       submitEnhancedForm(form);
     });

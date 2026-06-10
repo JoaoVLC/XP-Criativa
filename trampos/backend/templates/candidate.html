@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="container">
+    <section class="card mb-4">
+      <a href="{{ url_for('profile_page') }}" class="back-link">Voltar</a>
+      <div class="profile-header profile-card-top">
+        {% if candidate.avatar_data %}
+          <img src="{{ candidate.avatar_data }}" alt="Avatar de {{ candidate.nome }}" class="profile-avatar-image" />
+        {% else %}
+          <div class="profile-avatar">{{ avatar_initial(candidate.nome) }}</div>
+        {% endif %}
+        <div>
+          <h1 class="compact-title">{{ candidate.nome }}</h1>
+          <span class="badge badge-success">Freelancer</span>
+          <p class="page-subtitle">{{ candidate.email }}</p>
+        </div>
+      </div>
+      <div class="form-actions">
+        {% if candidate.curriculo_nome %}
+          <a href="{{ url_for('download_resume', id_usuario=candidate.id_usuario) }}" class="btn btn-primary">Baixar currículo</a>
+        {% else %}
+          <span class="badge badge-warning">Sem currículo</span>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Histórico de candidaturas</h2>
+      {% for candidatura in applications %}
+        <div class="activity-item">
+          <div class="activity-info">
+            <a href="{{ url_for('job_detail', id_vaga=candidatura.id_vaga) }}" class="activity-title">{{ candidatura.titulo }}</a>
+            <div class="activity-meta">{{ candidatura.empresa_nome }} - {{ candidatura.local }} - {{ candidatura.criada_em|datetime_br }}</div>
+          </div>
+          <span class="badge badge-{{ status_class(candidatura.status) }}">{{ status_label(candidatura.status) }}</span>
+        </div>
+      {% else %}
+        <p class="empty-small">Este candidato ainda não possui histórico.</p>
+      {% endfor %}
+    </section>
+  </main>
+{% endblock %}

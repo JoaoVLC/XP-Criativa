@@ -1,6 +1,6 @@
 {% if flash %}
-  <div class="container">
-    <div class="flash-banner flash-{{ flash.type }}">
+  <div class="container flash-container">
+    <div class="flash-banner flash-{{ flash.type }}" role="status">
       {{ flash.message }}
     </div>
   </div>

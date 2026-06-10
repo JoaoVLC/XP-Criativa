@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="container admin-page">
+    <section class="page-header">
+      <h1>Painel administrador</h1>
+      <p class="page-subtitle">Gerencie usuários, empresas, vagas e candidaturas.</p>
+    </section>
+
+    <section class="stats-grid mb-4">
+      <div class="stat-card"><strong>{{ stats.usuarios }}</strong><span>Usuários CPF</span></div>
+      <div class="stat-card"><strong>{{ stats.empresas }}</strong><span>Empresas CNPJ</span></div>
+      <div class="stat-card"><strong>{{ stats.vagas }}</strong><span>Vagas</span></div>
+      <div class="stat-card"><strong>{{ stats.candidaturas }}</strong><span>Candidaturas</span></div>
+    </section>
+
+    <section class="card mb-4">
+      <h2 class="section-title">Usuários e empresas</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Documento</th>
+              <th>Tipo</th>
+              <th>Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in users %}
+              <tr>
+                <td colspan="3">
+                  <form method="post" action="{{ url_for('admin_update_user', id_usuario=item.id_usuario) }}" class="admin-edit-form">
+                    <input type="text" name="nome" value="{{ item.razao_social or item.nome }}" placeholder="Nome ou razão social" />
+                    <input type="email" name="email" value="{{ item.email }}" placeholder="Email" />
+                    <input type="text" name="cpf" value="{{ item.cpf or '' }}" placeholder="CPF" />
+                    <input type="text" name="cnpj" value="{{ item.cnpj or '' }}" placeholder="CNPJ" />
+                    <button class="btn btn-ghost btn-sm" type="submit">Atualizar</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="post" action="{{ url_for('admin_update_user_type', id_usuario=item.id_usuario) }}" class="inline-form">
+                    <select name="tipo">
+                      <option value="freelancer" {% if item.tipo == 'freelancer' %}selected{% endif %}>Freelancer</option>
+                      <option value="empresa" {% if item.tipo == 'empresa' %}selected{% endif %}>Empresa</option>
+                      <option value="admin" {% if item.tipo == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm" type="submit">Salvar</button>
+                  </form>
+                </td>
+                <td>
+                  {% if item.tipo == 'freelancer' and item.curriculo_nome %}
+                    <a href="{{ url_for('download_resume', id_usuario=item.id_usuario) }}" class="btn btn-primary btn-sm">Currículo</a>
+                  {% endif %}
+                  <form method="post" action="{{ url_for('admin_delete_user', id_usuario=item.id_usuario) }}" class="inline-form">
+                    <button type="submit" class="btn btn-outline btn-sm">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card mb-4">
+      <h2 class="section-title">Vagas</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Título</th><th>Empresa</th><th>Status</th><th>Data</th><th>Ações</th></tr>
+          </thead>
+          <tbody>
+            {% for vaga in jobs %}
+              <tr>
+                <td>{{ vaga.titulo }}</td>
+                <td>{{ vaga.empresa_nome }}</td>
+                <td>{{ job_status_label(vaga.status) }}</td>
+                <td>{{ vaga.data|date_br }}</td>
+                <td>
+                  <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="btn btn-primary btn-sm">Ver</a>
+                  <a href="{{ url_for('delete_job_page', id_vaga=vaga.id_vaga) }}" class="btn btn-outline btn-sm">Excluir</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">Candidaturas</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Candidato</th><th>Vaga</th><th>Status</th><th>Acoes</th></tr>
+          </thead>
+          <tbody>
+            {% for candidatura in applications %}
+              <tr>
+                <td>{{ candidatura.candidato_nome }}</td>
+                <td>{{ candidatura.vaga_titulo }}</td>
+                <td><span class="badge badge-{{ status_class(candidatura.status) }}">{{ status_label(candidatura.status) }}</span></td>
+                <td>
+                  <form method="post" action="{{ url_for('update_application_status', id_candidatura=candidatura.id_candidatura) }}" class="inline-form">
+                    <button name="status" value="aceito" class="btn btn-success btn-sm" type="submit">Aceitar</button>
+                    <button name="status" value="recusado" class="btn btn-outline btn-sm" type="submit">Recusar</button>
+                  </form>
+                  <form method="post" action="{{ url_for('delete_application', id_candidatura=candidatura.id_candidatura) }}" class="inline-form">
+                    <button type="submit" class="btn btn-ghost btn-sm">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+{% endblock %}

@@ -1,20 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container">
-    {# Tela reutilizavel para confirmacoes sensiveis antes do POST final. #}
-    <div class="card card-accent confirm-card">
-      <span class="badge badge-{{ 'danger' if danger else 'primary' }} mb-2">Confirmacao</span>
+  <main class="container">
+    <section class="card card-accent confirm-card">
+      <span class="badge badge-{{ 'danger' if danger else 'primary' }}">Confirmação</span>
       <h1>{{ card_title }}</h1>
       <p class="page-subtitle">{{ card_message }}</p>
       <p class="confirm-copy">{{ card_details }}</p>
-
       <div class="form-actions">
         <form method="post" action="{{ confirm_action }}">
           <button type="submit" class="btn {{ 'btn-danger' if danger else 'btn-primary' }}">{{ confirm_label }}</button>
         </form>
         <a href="{{ cancel_url }}" class="btn btn-ghost">Cancelar</a>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 {% endblock %}

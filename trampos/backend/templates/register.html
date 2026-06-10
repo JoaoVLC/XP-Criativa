@@ -1,102 +1,94 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="auth-container">
-    <div class="auth-card">
-      <div class="auth-logo">
-        <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="auth-logo-image" />
-      </div>
+  <main class="auth-container">
+    <section class="auth-card auth-card-wide">
+      <div class="auth-logo"><img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="auth-logo-image" /></div>
       <h1 class="auth-title">Criar conta</h1>
-
-      {# Mantem valores e erros vindos da rota apos uma tentativa invalida. #}
-      <form method="post" action="{{ url_for('register') }}" novalidate>
-        <div class="form-group">
-          <label for="nome">Nome completo <span class="required">*</span></label>
-          <input
-            type="text"
-            id="nome"
-            name="nome"
-            value="{{ form_data.nome }}"
-            class="{{ 'input-error' if errors.get('nome') else '' }}"
-            autocomplete="name"
-          />
-          <span class="field-error">{{ errors.get('nome', '') }}</span>
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email <span class="required">*</span></label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value="{{ form_data.email }}"
-            class="{{ 'input-error' if errors.get('email') else '' }}"
-            autocomplete="email"
-          />
-          <span class="field-error">{{ errors.get('email', '') }}</span>
-        </div>
-
+      <form method="post" action="{{ url_for('register') }}" enctype="multipart/form-data" novalidate>
         <div class="form-group">
           <label>Tipo de conta <span class="required">*</span></label>
-          {# Seletor visual para o mesmo campo tipo processado no backend. #}
           <div class="tipo-selector">
             <label class="tipo-option">
               <input type="radio" name="tipo" value="freelancer" {% if form_data.tipo == 'freelancer' %}checked{% endif %} />
-              <div class="tipo-card">
-                <span class="tipo-icon">👷</span>
-                <strong>Freelancer</strong>
-                <small>Busco trabalhos</small>
-              </div>
+              <div class="tipo-card"><strong>Pessoa física</strong><small>CPF e currículo</small></div>
             </label>
             <label class="tipo-option">
               <input type="radio" name="tipo" value="empresa" {% if form_data.tipo == 'empresa' %}checked{% endif %} />
-              <div class="tipo-card">
-                <span class="tipo-icon">🏢</span>
-                <strong>Empresa</strong>
-                <small>Ofereco vagas</small>
-              </div>
+              <div class="tipo-card"><strong>Empresa</strong><small>CNPJ e vagas</small></div>
             </label>
           </div>
           <span class="field-error">{{ errors.get('tipo', '') }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="senha">Senha <span class="required">*</span></label>
-          <div class="input-group">
-            <input
-              type="password"
-              id="senha"
-              name="senha"
-              class="{{ 'input-error' if errors.get('senha') else '' }}"
-              autocomplete="new-password"
-            />
-            <button type="button" class="input-toggle" onclick="toggleSenha('senha')">👁</button>
+        <div data-account-field="freelancer">
+          <div class="form-group">
+            <label for="nome">Nome completo <span class="required">*</span></label>
+            <input type="text" id="nome" name="nome" value="{{ form_data.nome }}" placeholder="Ex.: Ana Souza" class="{{ 'input-error' if errors.get('nome') else '' }}" autocomplete="name" />
+            <span class="helper-text">Nome usado no perfil e nas candidaturas.</span>
+            <span class="field-error">{{ errors.get('nome', '') }}</span>
           </div>
-          <span class="field-error">{{ errors.get('senha', '') }}</span>
+          <div class="form-group">
+            <label for="cpf">CPF <span class="required">*</span></label>
+            <input type="text" id="cpf" name="cpf" value="{{ form_data.cpf }}" placeholder="Apenas números, ex.: 00000000000" class="{{ 'input-error' if errors.get('cpf') else '' }}" inputmode="numeric" />
+            <span class="helper-text">Para fins academicos, qualquer sequencia numerica e aceita.</span>
+            <span class="field-error">{{ errors.get('cpf', '') }}</span>
+          </div>
+          <div class="form-group">
+            <label for="curriculo">Currículo em PDF <span class="required">*</span></label>
+            <input type="file" id="curriculo" name="curriculo" accept="application/pdf,.pdf" class="{{ 'input-error' if errors.get('curriculo') else '' }}" />
+            <span class="helper-text">Obrigatório para pessoa física. Máximo de 6 MB.</span>
+            <span class="field-error">{{ errors.get('curriculo', '') }}</span>
+          </div>
+        </div>
+
+        <div data-account-field="empresa" hidden>
+          <div class="form-group">
+            <label for="razao_social">Razão social <span class="required">*</span></label>
+            <input type="text" id="razao_social" name="razao_social" value="{{ form_data.razao_social }}" placeholder="Ex.: Tech Rapido Ltda." class="{{ 'input-error' if errors.get('razao_social') else '' }}" />
+            <span class="field-error">{{ errors.get('razao_social', '') }}</span>
+          </div>
+          <div class="form-group">
+            <label for="cnpj">CNPJ <span class="required">*</span></label>
+            <input type="text" id="cnpj" name="cnpj" value="{{ form_data.cnpj }}" placeholder="Apenas números, ex.: 00000000000000" class="{{ 'input-error' if errors.get('cnpj') else '' }}" inputmode="numeric" />
+            <span class="helper-text">Não validamos CNPJ real, mas impedimos duplicidade.</span>
+            <span class="field-error">{{ errors.get('cnpj', '') }}</span>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="confirmar">Confirmar senha <span class="required">*</span></label>
-          <div class="input-group">
-            <input
-              type="password"
-              id="confirmar"
-              name="confirmar"
-              class="{{ 'input-error' if errors.get('confirmar') else '' }}"
-              autocomplete="new-password"
-            />
-            <button type="button" class="input-toggle" onclick="toggleSenha('confirmar')">👁</button>
+          <label for="email">Email <span class="required">*</span></label>
+          <input type="email" id="email" name="email" value="{{ form_data.email }}" placeholder="contato@email.com" class="{{ 'input-error' if errors.get('email') else '' }}" autocomplete="email" required />
+          <span class="field-error">{{ errors.get('email', '') }}</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="senha">Senha <span class="required">*</span></label>
+            <div class="input-group">
+              <input type="password" id="senha" name="senha" placeholder="Mínimo de 8 caracteres" class="{{ 'input-error' if errors.get('senha') else '' }}" autocomplete="new-password" required />
+              <button type="button" class="input-toggle" onclick="toggleSenha('senha')">Ver</button>
+            </div>
+            <ul class="password-hints">
+              <li data-password-rule="size">8 caracteres</li>
+              <li data-password-rule="number">1 número</li>
+              <li data-password-rule="special">1 caractere especial</li>
+            </ul>
+            <span class="field-error">{{ errors.get('senha', '') }}</span>
           </div>
-          <span class="field-error">{{ errors.get('confirmar', '') }}</span>
+          <div class="form-group">
+            <label for="confirmar">Confirmar senha <span class="required">*</span></label>
+            <div class="input-group">
+              <input type="password" id="confirmar" name="confirmar" placeholder="Repita a senha" class="{{ 'input-error' if errors.get('confirmar') else '' }}" autocomplete="new-password" required />
+              <button type="button" class="input-toggle" onclick="toggleSenha('confirmar')">Ver</button>
+            </div>
+            <span class="field-error">{{ errors.get('confirmar', '') }}</span>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">Criar conta</button>
       </form>
-
-      <p class="auth-footer">
-        Ja tem conta?
-        <a href="{{ url_for('login_page') }}">Entrar</a>
-      </p>
-    </div>
-  </div>
+      <p class="auth-footer">Ja tem conta? <a href="{{ url_for('login_page') }}">Entrar</a></p>
+    </section>
+  </main>
 {% endblock %}

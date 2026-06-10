@@ -1,4 +1,4 @@
-# ── Python ───────────────────────────────────────────────────
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -9,33 +9,33 @@ __pycache__/
 venv/
 .venv/
 env/
-.env/
 
-# ── Variáveis de ambiente ─────────────────────────────────────
+# Variaveis de ambiente
 .env
-# .env.example é versionado (sem segredos)
+.env.*
+!.env.example
 
-# ── Banco de dados local ──────────────────────────────────────
+# Banco de dados local
 *.sqlite3
 *.db
 
-# ── Node / Frontend ───────────────────────────────────────────
+# Node / frontend
 node_modules/
 dist/
 .cache/
 
-# ── Editores / IDEs ───────────────────────────────────────────
+# Editores / IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# ── Sistema operacional ───────────────────────────────────────
+# Sistema operacional
 .DS_Store
 Thumbs.db
 
-# ── Build / misc ──────────────────────────────────────────────
+# Build / misc
 *.log
 *.egg-info/
 .pytest_cache/

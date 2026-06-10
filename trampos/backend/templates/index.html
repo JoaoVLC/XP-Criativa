@@ -1,136 +1,99 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container">
-    <div class="page-header home-hero">
+  <main class="container">
+    <section class="page-header home-hero">
       <div class="home-hero-copy">
         {% if user and user.tipo == 'empresa' %}
           <span class="badge badge-warning">Painel da empresa</span>
-          <h1>Encontre profissionais para a sua proxima vaga</h1>
-          <p class="page-subtitle">Acompanhe as oportunidades publicadas, visualize candidatos e publique novas vagas com rapidez.</p>
-        {% elif user %}
-          <span class="badge badge-success">Area do freelancer</span>
-          <h1>Encontre o seu proximo trampo</h1>
-          <p class="page-subtitle">Busque oportunidades, acompanhe candidaturas e mantenha seu perfil pronto para novas chances.</p>
+          <h1>Encontre profissionais para sua próxima vaga</h1>
+          <p class="page-subtitle">Publique oportunidades, acompanhe candidatos e visualize currículos em um único lugar.</p>
+        {% elif user and user.tipo == 'admin' %}
+          <span class="badge badge-primary">Administrador</span>
+          <h1>Controle operacional do Trampos</h1>
+          <p class="page-subtitle">Acesse o painel para gerenciar usuários, empresas, vagas e candidaturas.</p>
         {% else %}
-          <span class="badge badge-primary">Conectando oportunidades reais</span>
-          <h1>Vagas Disponiveis</h1>
-          <p class="page-subtitle">Encontre trabalhos informais, acompanhe candidaturas e gerencie perfis em uma experiencia server-side mais fluida.</p>
+          <span class="badge badge-success">Freelancers e empresas</span>
+          <h1>Vagas disponíveis</h1>
+          <p class="page-subtitle">Busque por área, empresa, localização e status da vaga.</p>
         {% endif %}
       </div>
       <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="hero-logo" />
-    </div>
+    </section>
 
-    {# Regiao atualizada pelos filtros sem recarregar a pagina quando o fetch funciona. #}
     <div id="job-results-region" aria-live="polite">
-      <form
-        method="get"
-        class="filter-bar filter-surface"
-        data-enhanced-filter="true"
-        data-update-target="#job-results-region"
-      >
-        <input
-          type="text"
-          name="busca"
-          class="search-input"
-          placeholder="Buscar por titulo, local ou empresa"
-          value="{{ filtros.busca }}"
-        />
-
-        <select name="categoria" class="select-input" data-auto-submit="true" aria-label="Filtrar vagas por categoria">
-          <option value="">Todas as categorias</option>
+      <form method="get" class="filter-bar filter-surface" data-enhanced-filter="true" data-update-target="#job-results-region">
+        <input type="text" name="busca" class="search-input" placeholder="Título, descrição ou empresa" value="{{ filtros.busca }}" />
+        <input type="text" name="local" class="search-input compact" placeholder="Localização" value="{{ filtros.local }}" />
+        <select name="categoria" class="select-input" data-auto-submit="true" aria-label="Filtrar por categoria">
+          <option value="">Todas as áreas</option>
           {% for categoria in categorias %}
-            <option value="{{ categoria.id_categoria }}" {% if filtros.categoria == categoria.id_categoria ~ '' %}selected{% endif %}>
-              {{ categoria.nome }}
-            </option>
+            <option value="{{ categoria.id_categoria }}" {% if filtros.categoria == categoria.id_categoria ~ '' %}selected{% endif %}>{{ categoria.nome }}</option>
           {% endfor %}
         </select>
-
+        <select name="empresa" class="select-input" data-auto-submit="true" aria-label="Filtrar por empresa">
+          <option value="">Todas as empresas</option>
+          {% for empresa in empresas %}
+            <option value="{{ empresa.id_usuario }}" {% if filtros.empresa == empresa.id_usuario ~ '' %}selected{% endif %}>{{ empresa.nome }}</option>
+          {% endfor %}
+        </select>
+        <select name="situacao" class="select-input" data-auto-submit="true" aria-label="Filtrar por status">
+          <option value="">Todos os status</option>
+          {% for key, label in job_statuses.items() %}
+            <option value="{{ key }}" {% if filtros.situacao == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
         <button type="submit" class="btn btn-primary">Filtrar</button>
-        {% if filtros.busca or filtros.categoria %}
-          <a href="{{ url_for('home') }}" class="btn btn-ghost">Limpar</a>
-        {% endif %}
+        <a href="{{ url_for('home') }}" class="btn btn-ghost">Limpar</a>
       </form>
 
       {% if user %}
-        <div class="info-banner">
-          Bem-vindo, <strong>{{ user.nome }}</strong>.
-          {% if user.tipo == 'empresa' %}
-            Voce pode publicar vagas e acompanhar candidatos.
-          {% else %}
-            Voce pode se candidatar e acompanhar o andamento pelo perfil.
-          {% endif %}
-        </div>
-
         <div class="role-highlight role-highlight-{{ user.tipo }}">
           <div>
-            <strong>
-              {% if user.tipo == 'empresa' %}
-                Sua area esta pronta para gerenciar contratacoes.
-              {% else %}
-                Sua area esta pronta para acompanhar oportunidades.
-              {% endif %}
-            </strong>
+            <strong>Olá, {{ user.nome }}.</strong>
             <p>
-              {% if user.tipo == 'empresa' %}
-                Veja candidatos nas suas vagas ou publique uma nova oportunidade.
-              {% else %}
-                Revise suas candidaturas ou atualize seu perfil com avatar e dados.
-              {% endif %}
+              {% if user.tipo == 'empresa' %}Gerencie suas vagas pelo perfil ou publique uma nova oportunidade.{% elif user.tipo == 'admin' %}O painel administrativo está disponível no menu superior.{% else %}Mantenha seu currículo atualizado antes de se candidatar.{% endif %}
             </p>
           </div>
           <div class="role-highlight-actions">
             {% if user.tipo == 'empresa' %}
               <a href="{{ url_for('create_job_page') }}" class="btn btn-primary btn-sm">Publicar vaga</a>
-              <a href="{{ url_for('profile_page') }}" class="btn btn-ghost btn-sm">Ver perfil</a>
-            {% else %}
-              <a href="{{ url_for('profile_page') }}" class="btn btn-primary btn-sm">Ver perfil</a>
-              <a href="{{ url_for('home') }}" class="btn btn-ghost btn-sm">Explorar vagas</a>
+            {% elif user.tipo == 'admin' %}
+              <a href="{{ url_for('admin_page') }}" class="btn btn-primary btn-sm">Abrir admin</a>
             {% endif %}
+            <a href="{{ url_for('profile_page') }}" class="btn btn-ghost btn-sm">Configurações</a>
           </div>
         </div>
       {% endif %}
 
-      <div class="job-list">
-        {# Cards de vagas: resumo da oportunidade e link para a pagina de detalhes. #}
+      <section class="job-list">
         {% for vaga in vagas %}
-          <div class="job-card">
+          <article class="job-card">
             <div class="job-card-body">
               <div class="job-card-header">
-                {% if vaga.categoria_nome %}
-                  <span class="badge badge-secondary">{{ vaga.categoria_nome }}</span>
-                {% endif %}
+                {% if vaga.categoria_nome %}<span class="badge badge-secondary">{{ vaga.categoria_nome }}</span>{% endif %}
+                <span class="badge badge-{{ 'success' if vaga.status == 'aberta' else 'warning' }}">{{ job_status_label(vaga.status) }}</span>
               </div>
-
-              <h2 class="job-card-title">
-                <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}">{{ vaga.titulo }}</a>
-              </h2>
-
-              <p class="job-card-desc">
-                {{ vaga.descricao[:110] }}{% if vaga.descricao|length > 110 %}...{% endif %}
-              </p>
-
+              <h2 class="job-card-title"><a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}">{{ vaga.titulo }}</a></h2>
+              <p class="job-card-desc">{{ vaga.descricao[:130] }}{% if vaga.descricao|length > 130 %}...{% endif %}</p>
               <div class="job-card-meta">
-                <span>📍 {{ vaga.local }}</span>
-                <span>📅 {{ vaga.data|date_br }}</span>
-                <span>💰 {{ vaga.pagamento|money_br }}</span>
-                <span>🏢 {{ vaga.empresa_nome }}</span>
+                <span class="meta-chip">📍 {{ vaga.local }}</span>
+                <span class="meta-chip">📅 {{ vaga.data|date_br }}</span>
+                <span class="meta-chip meta-money">💰 {{ vaga.pagamento|money_br }}</span>
+                <span class="meta-chip">🏢 {{ vaga.empresa_nome }}</span>
               </div>
             </div>
-
             <div class="job-card-action">
-              <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="btn btn-primary btn-sm">
-                Ver detalhes
-              </a>
+              <a href="{{ url_for('job_detail', id_vaga=vaga.id_vaga) }}" class="btn btn-primary btn-sm">Ver detalhes</a>
             </div>
-          </div>
+          </article>
         {% else %}
           <div class="empty-state">
-            <span>🔍</span>
+            <span>🔎</span>
             <p>Nenhuma vaga encontrada com os filtros informados.</p>
           </div>
         {% endfor %}
-      </div>
+      </section>
     </div>
-  </div>
+  </main>
 {% endblock %}

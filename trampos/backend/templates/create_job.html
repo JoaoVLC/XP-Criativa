@@ -1,70 +1,74 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container">
-    <div class="page-header">
-      <h1>Publicar Nova Vaga</h1>
-      <p class="page-subtitle">Preencha os detalhes para encontrar o profissional ideal.</p>
-    </div>
+  <main class="container">
+    <section class="page-header">
+      <h1>{{ submit_label }}</h1>
+      <p class="page-subtitle">Preencha os dados da oportunidade com clareza para facilitar a candidatura.</p>
+    </section>
 
-    <div class="card card-accent" style="max-width: 720px;">
-      <p class="card-intro">
-        Informe titulo, local, data e pagamento para deixar a oportunidade mais clara e atrativa para os candidatos.
-      </p>
-      {# Formulario de publicacao reutiliza form_data e errors definidos pela rota. #}
-      <form method="post" action="{{ url_for('create_job') }}" novalidate>
+    <section class="card card-accent form-card">
+      <form method="post" action="{{ form_action }}" novalidate>
         <div class="form-row">
           <div class="form-group">
-            <label for="titulo">Titulo da Vaga <span class="required">*</span></label>
-            <input type="text" id="titulo" name="titulo" value="{{ form_data.titulo }}" class="{{ 'input-error' if errors.get('titulo') else '' }}" />
+            <label for="titulo">Título da vaga <span class="required">*</span></label>
+            <input type="text" id="titulo" name="titulo" value="{{ form_data.titulo }}" placeholder="Ex.: Designer para identidade visual" class="{{ 'input-error' if errors.get('titulo') else '' }}" required />
+            <span class="helper-text">Use um título objetivo, entre área e atividade.</span>
             <span class="field-error">{{ errors.get('titulo', '') }}</span>
           </div>
-
           <div class="form-group">
-            <label for="local">Localizacao <span class="required">*</span></label>
-            <input type="text" id="local" name="local" value="{{ form_data.local }}" class="{{ 'input-error' if errors.get('local') else '' }}" />
+            <label for="local">Localização <span class="required">*</span></label>
+            <input type="text" id="local" name="local" value="{{ form_data.local }}" placeholder="Ex.: Remoto ou Curitiba - PR" class="{{ 'input-error' if errors.get('local') else '' }}" required />
             <span class="field-error">{{ errors.get('local', '') }}</span>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="descricao">Descricao <span class="required">*</span></label>
-          <textarea id="descricao" name="descricao" rows="5" class="{{ 'input-error' if errors.get('descricao') else '' }}">{{ form_data.descricao }}</textarea>
+          <label for="descricao">Descrição <span class="required">*</span></label>
+          <textarea id="descricao" name="descricao" rows="5" placeholder="Descreva atividades, requisitos, prazo e materiais envolvidos." class="{{ 'input-error' if errors.get('descricao') else '' }}" required>{{ form_data.descricao }}</textarea>
           <span class="field-error">{{ errors.get('descricao', '') }}</span>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="data">Data do servico <span class="required">*</span></label>
-            <input type="date" id="data" name="data" value="{{ form_data.data }}" class="{{ 'input-error' if errors.get('data') else '' }}" />
+            <label for="data">Data do serviço <span class="required">*</span></label>
+            <input type="date" id="data" name="data" value="{{ form_data.data }}" class="{{ 'input-error' if errors.get('data') else '' }}" required />
             <span class="field-error">{{ errors.get('data', '') }}</span>
           </div>
-
           <div class="form-group">
             <label for="pagamento">Pagamento (R$) <span class="required">*</span></label>
-            <input type="number" id="pagamento" name="pagamento" step="0.01" min="0" value="{{ form_data.pagamento }}" class="{{ 'input-error' if errors.get('pagamento') else '' }}" />
+            <input type="number" id="pagamento" name="pagamento" step="0.01" min="0" value="{{ form_data.pagamento }}" placeholder="Ex.: 500.00" class="{{ 'input-error' if errors.get('pagamento') else '' }}" required />
             <span class="field-error">{{ errors.get('pagamento', '') }}</span>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="id_categoria">Categoria</label>
-          <select id="id_categoria" name="id_categoria" class="{{ 'input-error' if errors.get('id_categoria') else '' }}">
-            <option value="">Sem categoria</option>
-            {% for categoria in categorias %}
-              <option value="{{ categoria.id_categoria }}" {% if form_data.id_categoria == categoria.id_categoria ~ '' %}selected{% endif %}>
-                {{ categoria.nome }}
-              </option>
-            {% endfor %}
-          </select>
-          <span class="field-error">{{ errors.get('id_categoria', '') }}</span>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_categoria">Área ou categoria</label>
+            <select id="id_categoria" name="id_categoria" class="{{ 'input-error' if errors.get('id_categoria') else '' }}">
+              <option value="">Sem categoria</option>
+              {% for categoria in categorias %}
+                <option value="{{ categoria.id_categoria }}" {% if form_data.id_categoria == categoria.id_categoria or form_data.id_categoria == categoria.id_categoria ~ '' %}selected{% endif %}>{{ categoria.nome }}</option>
+              {% endfor %}
+            </select>
+            <span class="field-error">{{ errors.get('id_categoria', '') }}</span>
+          </div>
+          <div class="form-group">
+            <label for="status">Status da vaga <span class="required">*</span></label>
+            <select id="status" name="status" class="{{ 'input-error' if errors.get('status') else '' }}">
+              {% for key, label in job_statuses.items() %}
+                <option value="{{ key }}" {% if form_data.status == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <span class="field-error">{{ errors.get('status', '') }}</span>
+          </div>
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Publicar Vaga</button>
-          <a href="{{ url_for('home') }}" class="btn btn-ghost">Cancelar</a>
+          <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+          <a href="{{ url_for('profile_page') }}" class="btn btn-ghost">Cancelar</a>
         </div>
       </form>
-    </div>
-  </div>
+    </section>
+  </main>
 {% endblock %}

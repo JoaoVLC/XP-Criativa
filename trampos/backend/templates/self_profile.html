@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="container">
+    <section class="public-profile">
+      <div class="public-profile-card">
+        {% if profile_user.avatar_data %}
+          <img src="{{ profile_user.avatar_data }}" alt="Avatar de {{ profile_user.nome }}" class="public-profile-avatar" />
+        {% else %}
+          <div class="public-profile-fallback">{{ avatar_initial(profile_user.nome) }}</div>
+        {% endif %}
+        <div class="public-profile-copy">
+          <span class="badge badge-{{ 'primary' if user.tipo == 'empresa' else 'success' if user.tipo == 'freelancer' else 'warning' }}">
+            {{ 'Empresa' if user.tipo == 'empresa' else 'Freelancer' if user.tipo == 'freelancer' else 'Admin' }}
+          </span>
+          <h1>{{ profile_user.razao_social or profile_user.nome }}</h1>
+          <p>{{ profile_user.email }}</p>
+          <div class="profile-summary-grid">
+            {% if user.tipo == 'freelancer' %}
+              <span>🪪 CPF: {{ profile_user.cpf or 'Não informado' }}</span>
+              <span>📄 Currículo: {{ profile_user.curriculo_nome or 'Não enviado' }}</span>
+              <span>✅ Disponível para candidaturas</span>
+            {% elif user.tipo == 'empresa' %}
+              <span>🪪 CNPJ: {{ profile_user.cnpj or 'Não informado' }}</span>
+              <span>🏢 Empresa contratante</span>
+              <span>📌 Vagas publicadas: {{ jobs|length }}</span>
+            {% else %}
+              <span>🛠️ Perfil administrativo</span>
+            {% endif %}
+          </div>
+          <div class="form-actions">
+            <a href="{{ url_for('profile_page') }}" class="btn btn-primary">Editar configurações</a>
+            <a href="{{ url_for('home') }}" class="btn btn-ghost">Ver vagas</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}

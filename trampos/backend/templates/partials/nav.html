@@ -1,5 +1,4 @@
 <nav id="main-nav">
-  {# Identidade visual fixa no topo da aplicacao. #}
   <div class="nav-brand">
     <a href="{{ url_for('home') }}">
       <img src="{{ static_asset_url(request, 'img/logo.png') }}" alt="Trampos" class="nav-brand-logo" />
@@ -7,24 +6,20 @@
     </a>
   </div>
 
-  <button class="nav-toggle" type="button" onclick="toggleNav()" aria-label="Abrir menu">
-    &#9776;
-  </button>
+  <button class="nav-toggle" type="button" onclick="toggleNav()" aria-label="Abrir menu">&#9776;</button>
 
   <div class="nav-menu" id="nav-menu">
-    {# Links principais variam conforme usuario anonimo, freelancer ou empresa. #}
-    <a href="{{ url_for('home') }}" class="{{ 'active' if active_page == 'vagas' else '' }}">
-      Vagas
-    </a>
-
+    <a href="{{ url_for('home') }}" class="{{ 'active' if active_page == 'vagas' else '' }}">Vagas</a>
     {% if user and user.tipo == 'empresa' %}
-      <a href="{{ url_for('create_job_page') }}" class="{{ 'active' if active_page == 'criar' else '' }}">
-        Publicar Vaga
-      </a>
+      <a href="{{ url_for('create_job_page') }}" class="{{ 'active' if active_page == 'criar' else '' }}">Publicar</a>
     {% endif %}
-
+    {% if user and user.tipo == 'admin' %}
+      <a href="{{ url_for('admin_page') }}" class="{{ 'active' if active_page == 'admin' else '' }}">Admin</a>
+    {% endif %}
     {% if user %}
-      {# Avatar usa imagem enviada pelo usuario; sem imagem, mostra a inicial. #}
+      <a href="{{ url_for('notifications_page') }}" class="nav-icon-link {{ 'active' if active_page == 'notificacoes' else '' }}" aria-label="Notificações" title="Notificações">
+        <span aria-hidden="true">🔔</span>{% if unread_notifications %}<span class="nav-count">{{ unread_notifications }}</span>{% endif %}
+      </a>
       <a href="{{ url_for('profile_page') }}" class="nav-user {{ 'active' if active_page == 'perfil' else '' }}">
         {% if user_avatar_data %}
           <img src="{{ user_avatar_data }}" alt="Avatar de {{ user.nome }}" class="nav-avatar-image" />
@@ -33,14 +28,18 @@
         {% endif %}
         {{ user.nome.split(' ')[0] }}
       </a>
+      <button class="theme-toggle" type="button" onclick="toggleTheme()" title="Alternar tema">
+        <span id="theme-icon" aria-hidden="true">🌙</span>
+        <span id="theme-label" class="sr-only">Ativar tema escuro</span>
+      </button>
       <a href="{{ url_for('logout') }}" class="btn-nav-ghost">Sair</a>
     {% else %}
-      <a href="{{ url_for('login_page') }}" class="{{ 'active' if active_page == 'login' else '' }}">
-        Entrar
-      </a>
-      <a href="{{ url_for('register_page') }}" class="btn-nav-primary">
-        Cadastre-se
-      </a>
+      <button class="theme-toggle" type="button" onclick="toggleTheme()" title="Alternar tema">
+        <span id="theme-icon" aria-hidden="true">🌙</span>
+        <span id="theme-label" class="sr-only">Ativar tema escuro</span>
+      </button>
+      <a href="{{ url_for('login_page') }}" class="{{ 'active' if active_page == 'login' else '' }}">Entrar</a>
+      <a href="{{ url_for('register_page') }}" class="btn-nav-primary">Cadastre-se</a>
     {% endif %}
   </div>
 </nav>

@@ -1,97 +1,68 @@
 # XP-Criativa
-Projeto da disciplina Experiência Criativa
 
----
+Projeto academico da disciplina Experiencia Criativa.
 
 ## Trampos
 
-Plataforma simples para conectar pequenos negócios que precisam de trabalhadores temporários com pessoas em busca de bicos rápidos.
+Plataforma web para conectar empresas que publicam vagas temporarias e freelancers que se candidatam com perfil, CPF e curriculo.
 
-### Stack
-- **Backend:** Python + FastAPI + Jinja
-- **Banco de dados:** MySQL
-- **Sessão e formulários:** SessionMiddleware + POST/Redirect/GET
-- **Acesso a dados:** PyMySQL com SQL direto
+## Stack
 
----
+- Backend: Python, FastAPI e Jinja2
+- Banco de dados: MySQL
+- Sessao: Starlette SessionMiddleware
+- Dados: PyMySQL com SQL direto
+- Seguranca de senha: bcrypt
+- Interface: HTML server-side, CSS responsivo e JavaScript leve
 
-### Estrutura
-
-```
-trampos/
-├── backend/
-│   ├── app/
-│   │   ├── main.py          # Entrypoint FastAPI
-│   │   └── database.py      # Conexão com MySQL sem ORM
-│   ├── static/
-│   │   └── css/styles.css   # Estilos servidos pelo FastAPI
-│   ├── templates/           # Templates Jinja server-side
-│   ├── requirements.txt
-│   ├── seed.py              # Recria e popula o banco a partir do SQL
-│   └── trampos.sql
-```
-
----
-
-### Como rodar
-
-#### 1. Banco de dados
-
-O backend usa a variável `DATABASE_URL`. Exemplo:
-
-```bash
-DATABASE_URL=mysql+pymysql://root:123456@localhost/trampos
-```
-
-#### 2. Backend
+## Como rodar
 
 ```bash
 cd trampos/backend
-
-# Crie e ative o ambiente virtual
-python -m venv venv
-source venv/bin/activate        # Linux/Mac
-# venv\Scripts\activate         # Windows
-
-# Instale as dependências
 pip install -r requirements.txt
+```
 
-# Configure o banco no arquivo .env
-# Exemplo:
-# DATABASE_URL=mysql+pymysql://root:123456@localhost/trampos
+Crie um arquivo `.env` com a conexao MySQL:
 
-# Crie e popule o banco
+```bash
+DATABASE_URL=mysql+pymysql://root:root@localhost/trampos
+SESSION_SECRET=troque-este-segredo
+```
+
+Recrie o banco:
+
+```bash
 python seed.py
+```
 
-# Rode o servidor
+Execute o servidor:
+
+```bash
 uvicorn app.main:app --reload
 ```
 
-O servidor sobe em **http://localhost:8000**
-Documentação automática em **http://localhost:8000/docs**
+Acesse `http://localhost:8000`.
 
----
+## Contas de exemplo
 
-### Fluxo de uso
+Todas usam a senha `senha123`.
 
-1. **Acesse `/`** para listar vagas com filtro por texto e categoria.
-2. **Cadastre-se** como empresa ou freelancer.
-3. **Empresas** publicam vagas e acompanham candidatos.
-4. **Freelancers** se candidatam e acompanham o status pelo perfil.
+- Administrador: `admin@trampos.dev`
+- Empresa: `tech@trampos.dev`
+- Freelancer: `ana@trampos.dev`
 
----
+## Funcionalidades
 
-### Rotas principais
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/` | Listagem de vagas |
-| GET/POST | `/login` | Login por formulário |
-| GET/POST | `/cadastro` | Cadastro de usuário |
-| GET | `/logout` | Encerrar sessão |
-| GET/POST | `/vaga/nova` | Publicar vaga |
-| GET | `/vaga/{id_vaga}` | Detalhe da vaga |
-| POST | `/vaga/{id_vaga}/candidatar` | Enviar candidatura |
-| POST | `/candidaturas/{id_candidatura}/status` | Aceitar ou recusar candidatura |
-| GET/POST | `/perfil` | Visualizar e editar perfil |
-| POST | `/perfil/excluir` | Excluir conta |
+- Cadastro separado para pessoa fisica CPF e empresa CNPJ.
+- CPF/CNPJ aceitam qualquer sequencia numerica, mas nao duplicam.
+- Senhas armazenadas com bcrypt.
+- Upload e visualizacao de avatar.
+- Curriculo PDF obrigatorio para freelancers.
+- Vagas com criar, listar, editar e excluir.
+- Candidaturas com criar, listar, atualizar status, cancelar e excluir.
+- Empresas visualizam candidatos, historico e curriculo.
+- Administrador gerencia usuarios, empresas, vagas e candidaturas.
+- Notificacoes internas para eventos principais.
+- Expiracao de sessao com redirecionamento para login.
+- Tema claro/escuro com persistencia local.
+- Filtros por area, empresa, localizacao e status.

@@ -10,13 +10,10 @@ SQL_FILE = Path(__file__).with_name("trampos.sql")
 def iter_statements(sql_script: str):
     cleaned_lines: list[str] = []
     for raw_line in sql_script.splitlines():
-        stripped_line = raw_line.strip()
-        if not stripped_line or stripped_line.startswith("--"):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("--"):
             continue
-
-        line_without_inline_comment = raw_line.split("--", 1)[0].rstrip()
-        if line_without_inline_comment:
-            cleaned_lines.append(line_without_inline_comment)
+        cleaned_lines.append(raw_line)
 
     for statement in "\n".join(cleaned_lines).split(";"):
         normalized = statement.strip()
@@ -43,10 +40,11 @@ def main() -> None:
     finally:
         connection.close()
 
-    print("✅ Banco recriado com os dados de exemplo do arquivo trampos.sql.")
+    print("Banco recriado com os dados de exemplo do arquivo trampos.sql.")
     print(f"Banco: {database_name}")
     print("Login empresa: tech@trampos.dev / senha123")
     print("Login freelancer: ana@trampos.dev / senha123")
+    print("Login administrador: admin@trampos.dev / senha123")
 
 
 if __name__ == "__main__":

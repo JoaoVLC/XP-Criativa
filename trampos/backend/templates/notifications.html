@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="container">
+    <section class="page-header">
+      <h1>Notificações</h1>
+      <p class="page-subtitle">Acompanhe eventos importantes da sua conta.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-heading-row">
+        <h2 class="section-title">Histórico</h2>
+        {% if notifications %}
+          <form method="post" action="{{ url_for('clear_notifications') }}">
+            <button type="submit" class="btn btn-ghost btn-sm">Limpar</button>
+          </form>
+        {% endif %}
+      </div>
+
+      {% for item in notifications %}
+        <article class="notification-item notification-{{ item.tipo }}">
+          <div>
+            <strong>{{ item.titulo }}</strong>
+            <p>{{ item.mensagem }}</p>
+          </div>
+          <span class="activity-meta">{{ item.criada_em|datetime_br }}</span>
+        </article>
+      {% else %}
+        <p class="empty-small">Nenhuma notificação por enquanto.</p>
+      {% endfor %}
+    </section>
+  </main>
+{% endblock %}
